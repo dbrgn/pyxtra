@@ -9,15 +9,21 @@ import mechanize
 from BeautifulSoup import BeautifulSoup
 
 # Add your data here
-imageviewer = 'eog' # Preferred image viewer like eog, mirage, feh...
+imageviewer = 'open'#'eog' # Preferred image viewer like eog, mirage, feh...
 username = '' # Xtrazone username
 password = '' # Xtrazone password
 
 # Config variables
 _debug = False # Set to True to show debug output
 
-def main():
+def main(username='', password=''):
     # Check config
+    if (username == ''):
+        username = raw_input('username: ')
+        
+    if (password == ''):
+        password = raw_input('password: ')
+        
     if (username == '' or password == ''):
         print 'Error: Please set your username and password'
         return 1
@@ -163,4 +169,4 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    sys.exit(main(username, password))
