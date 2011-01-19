@@ -75,6 +75,10 @@ def parse_config():
         config.set('settings', 'password', password)
         config.set('settings', 'imageviewer', imageviewer)
         config.write(open(os.path.expanduser(config_file), 'w'))
+    else:
+        username = config.get('settings', 'username')
+        password = config.get('settings', 'password')
+        imageviewer = config.get('settings', 'imageviewer')
    
 
 def main():
