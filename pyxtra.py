@@ -1,35 +1,86 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""A small commandline utility written in Python to access the Swisscom Xtrazone SMS service
+
+License:
+Copyright (C) 2011 Danilo Bargen, Peter Manser
+
+pyxtra is free software: you can redistribute it and/or modify it under the
+terms of the GNU General Public License as published by the Free Software
+Foundation, either version 3 of the License, or (at your option) any later
+version.
+
+pyxtra is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License along with
+pyxtra. If not, see http://www.gnu.org/licenses/.
+"""
+
+
 import os
 import sys
 import urllib
 import re
+import ConfigParser
 
 import json
 import mechanize
 from BeautifulSoup import BeautifulSoup
 
-# Add your data here
-imageviewer = 'eog'  # Preferred image viewer like eog, mirage, feh...
-username = ''        # Xtrazone username
-password = ''        # Xtrazone password
 
-# Config variables
+# Some configuration variables
 _debug = False        # Set to True to show debug output
+separator = ''
 
-def main(username='', password=''):
+# Global variables
+username = ''
+password = ''
+imageviewer = ''
 
-    # Check config
-    if (username == ''):
-        username = raw_input('username: ')
-        
-    if (password == ''):
-        password = raw_input('password: ')
-        
-    if (username == '' or password == ''):
-        print 'Error: Please set your username and password'
-        return 1
+
+class XtrazoneError(Exception):
+    """Exception related with the Xtrazone page."""
+    pass
+
+
+def parse_config():
+    """Parse the configuration file."""
+    config_folder = '~/.pyxtra'  # Folder that will contain all configfiles
+    config_file = os.path.expanduser(config_folder + '/config')
+
+    config = ConfigParser.ConfigParser()  # ConfigParser instance
+
+    # Create folder if necessary
+    if not os.path.isdir(os.path.expanduser(config_folder)):
+        os.mkdir(os.path.expanduser(config_folder))
+
+    # Read config, write default config file if it doesn't exist yet.
+    global username, password, imageviewer
+    if not len(config.read(os.path.expanduser(config_file))):
+        print 'Could not find configuration file. Creating %s.' % config_file
+        username = raw_input('\nXtrazone username: ').strip()
+        print '\nEnter your password, in case you want to store it in the ' \
+              'config file. Warning: Password will be saved in plaintext.'
+        password = raw_input('Xtrazone password (<enter> to skip): ').strip()
+        print '\nPlease choose your preferred image viewer. On Ubuntu, we ' \
+              'suggest "eog", which is installed by default.'
+        imageviewer = raw_input('Image viewer: ').strip()
+        print 'Initial configuration is finished.\n'
+
+        config.add_section('settings')
+        config.set('settings', 'username', username)
+        config.set('settings', 'password', password)
+        config.set('settings', 'imageviewer', imageviewer)
+        config.write(open(os.path.expanduser(config_file), 'w'))
+   
+
+def main():
+
+    # Parse configuration file
+    parse_config()
         
     # Initialize mechanize instance
     b = mechanize.Browser()
@@ -174,4 +225,8 @@ def main(username='', password=''):
 
 
 if __name__ == '__main__':
-    sys.exit(main(username, password))
+    try:
+        main()
+    except ConfigError as e:
+        print e
+        sys.exit(1)
