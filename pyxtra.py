@@ -1,22 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import os, sys
-import json
-import re
+import os
+import sys
 import urllib
+import re
+
+import json
 import mechanize
 from BeautifulSoup import BeautifulSoup
 
 # Add your data here
-imageviewer = 'open'#'eog' # Preferred image viewer like eog, mirage, feh...
-username = '' # Xtrazone username
-password = '' # Xtrazone password
+imageviewer = 'eog'  # Preferred image viewer like eog, mirage, feh...
+username = ''        # Xtrazone username
+password = ''        # Xtrazone password
 
 # Config variables
-_debug = False # Set to True to show debug output
+_debug = False        # Set to True to show debug output
 
 def main(username='', password=''):
+
     # Check config
     if (username == ''):
         username = raw_input('username: ')
@@ -47,14 +50,14 @@ def main(username='', password=''):
 
     # Debugging stuff
     if _debug:
-        b.set_debug_http(True)
-        b.set_debug_redirects(True)
-        b.set_debug_responses(True)
+        b.setdebug_http(True)
+        b.setdebug_redirects(True)
+        b.setdebug_responses(True)
 
 
     # Get CAPTCHA URL
     try:
-        # This will start the session etc
+        # This will initialize the session and the necessary cookies.
         b.open('https://xtrazone.sso.bluewin.ch/index.html.de')
 
         b.addheaders = [
@@ -72,7 +75,7 @@ def main(username='', password=''):
                 }
         b.open(url, urllib.urlencode(data))
 
-        resp = json.loads(b.response().read()) # Convert response to dictionary
+        resp = json.loads(b.response().read())  # Convert response to dictionary
         captcha_url = 'http:' + resp['content']['messages']['operation']['imgUrl']
         captcha_token = resp['content']['messages']['operation']['token']
     except Exception as e:
@@ -80,9 +83,9 @@ def main(username='', password=''):
         return 1
 
 
-    # Display CAPTCHA using image viewer of choice
+    # Display CAPTCHA using image viewer of choice.
     print 'Image viewer has been launched to display CAPTCHA.'
-    os.system('%s %s > /dev/null 2>&1 &' % (imageviewer, captcha_url)) # TODO: very unsafe, fix
+    os.system('%s %s > /dev/null 2>&1 &' % (imageviewer, captcha_url))  # TODO: very unsafe, fix
     captcha = raw_input('Please enter CAPTCHA: ').strip()
     if captcha == '':
         print 'Error: CAPTCHA may not be empty.'
@@ -106,7 +109,7 @@ def main(username='', password=''):
                 }
         b.open(url, urllib.urlencode(data))
 
-        resp = json.loads(b.response().read()) # Convert response to dictionary
+        resp = json.loads(b.response().read())  # Convert response to dictionary
         if resp['status'] == 'login_failed':
             print 'Error: %s' % resp['message']
             return 1
@@ -118,17 +121,19 @@ def main(username='', password=''):
     # Retrieve user info
     try:
         b.open('https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
-        resp = json.loads(b.response().read()) # Convert response to dictionary
+        resp = json.loads(b.response().read())  # Convert response to dictionary
 
         # Parse HTML
         html = resp['content']
         soup = BeautifulSoup(html)
-        nickname = soup.find('div', {'class': 'userinfo'}) \
-                .find('h5').contents[0].strip()
-        fullname = soup.find('div', {'class': 'userinfo'}) \
-                .find('a', {'href': '/index.php/20?route=%2Fprofile'}).contents[0].strip()
-        remaining = int(re.search('&nbsp;([0-9]{1,3})&nbsp;',
-                soup.find('div', {'class': 'userinfo'}).find('span').contents[0]).group(1))
+        nickname = (soup.find('div', {'class': 'userinfo'})
+                    .find('h5').contents[0].strip())
+        fullname = (soup.find('div', {'class': 'userinfo'})
+                    .find('a', {'href': '/index.php/20?route=%2Fprofile'})
+                    .contents[0].strip())
+        remaining = (int(re.search('&nbsp;([0-9]{1,3})&nbsp;',
+                     soup.find('div', {'class': 'userinfo'}).find('span')
+                     .contents[0]).group(1)))
 
         print '-------------------------------'
         print 'Hi %s (%s), you have %u SMS/MMS left' % (fullname, nickname, remaining)
@@ -154,13 +159,13 @@ def main(username='', password=''):
                 }
         b.open(url, urllib.urlencode(data))
 
-        resp = json.loads(b.response().read()) # Convert response to dictionary
-        if (resp['content']['headline'] != 'Verarbeitung erfolgreich') \
-                or (resp['content']['isError'] != False):
-            print 'Error: An unknown error occured' # TODO: check for possible errors
+        resp = json.loads(b.response().read())  # Convert response to dictionary
+        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+            resp['content']['isError'] != False):
+            print 'Error: An unknown error occured'  # TODO: check for possible errors
             return 1
 
-        # Successfully sent sms
+        # Success message
         print '-------------------------------'
         print resp['content']['messages']['generic'][0]
         return 0
