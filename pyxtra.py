@@ -77,7 +77,7 @@ def main():
     # Display CAPTCHA using image viewer of choice
     print 'Image viewer has been launched to display CAPTCHA.'
     os.system('%s %s > /dev/null 2>&1 &' % (imageviewer, captcha_url)) # TODO: very unsafe, fix
-    captcha = raw_input('Please enter CAPTCHA: ')
+    captcha = raw_input('Please enter CAPTCHA: ').strip()
     if captcha == '':
         print 'Error: CAPTCHA may not be empty.'
         return 1
@@ -124,11 +124,42 @@ def main():
         remaining = int(re.search('&nbsp;([0-9]{1,3})&nbsp;',
                 soup.find('div', {'class': 'userinfo'}).find('span').contents[0]).group(1))
 
+        print '-------------------------------'
         print 'Hi %s (%s), you have %u SMS/MMS left' % (fullname, nickname, remaining)
 
     except Exception as e:
         print 'Error: Could not retrieve number of remaining SMS: %s' % e
         return 1
+
+
+    # Send SMS
+    try:
+        # Get receiver / message
+        print '-------------------------------'
+        receiver = raw_input('Receiver Nr: ').strip()
+        message = raw_input('Message: ').strip()
+
+        url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+        data = {'attachmentId': '',
+                'attachments': '',
+                'messagebody': message,
+                'receiversnames': receiver,
+                'recipients': '[]',
+                }
+        b.open(url, urllib.urlencode(data))
+
+        resp = json.loads(b.response().read()) # Convert response to dictionary
+        if (resp['content']['headline'] != 'Verarbeitung erfolgreich') \
+                or (resp['content']['isError'] != False):
+            print 'Error: An unknown error occured' # TODO: check for possible errors
+            return 1
+
+        # Successfully sent sms
+        print '-------------------------------'
+        print resp['content']['messages']['generic'][0]
+        return 0
+    except Exception as e:
+        print 'Error: Could not send SMS: %s' % e
 
 
 if __name__ == '__main__':
