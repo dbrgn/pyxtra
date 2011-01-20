@@ -109,7 +109,10 @@ def main():
         b.setdebug_redirects(True)
         b.setdebug_responses(True)
 
-
+    global password
+    if (password==''):
+        password = raw_input('password: ').strip()
+        
     # Get CAPTCHA URL
     try:
         # This will initialize the session and the necessary cookies.
@@ -201,28 +204,31 @@ def main():
     # Send SMS
     try:
         # Get receiver / message
-        print '-------------------------------'
-        receiver = raw_input('Receiver Nr: ').strip()
-        message = raw_input('Message: ').strip()
+        while (1):
+            print '-------------------------------'
+            receiver = raw_input('Receiver Nr [x=Exit]: ').strip()
+            if (receiver == 'x'):
+                break
+            message = raw_input('Message: ').strip()
+            
+            url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+            data = {'attachmentId': '',
+                    'attachments': '',
+                    'messagebody': message,
+                    'receiversnames': receiver,
+                    'recipients': '[]',
+                    }
+            b.open(url, urllib.urlencode(data))
 
-        url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
-        data = {'attachmentId': '',
-                'attachments': '',
-                'messagebody': message,
-                'receiversnames': receiver,
-                'recipients': '[]',
-                }
-        b.open(url, urllib.urlencode(data))
+            resp = json.loads(b.response().read())  # Convert response to dictionary
+            if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+                resp['content']['isError'] != False):
+                print 'Error: An unknown error occured'  # TODO: check for possible errors
+                return 1
 
-        resp = json.loads(b.response().read())  # Convert response to dictionary
-        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
-            resp['content']['isError'] != False):
-            print 'Error: An unknown error occured'  # TODO: check for possible errors
-            return 1
-
-        # Success message
-        print '-------------------------------'
-        print resp['content']['messages']['generic'][0]
+            # Success message
+            print '-------------------------------'
+            print resp['content']['messages']['generic'][0]
         return 0
     except Exception as e:
         print 'Error: Could not send SMS: %s' % e
@@ -231,6 +237,6 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except ConfigError as e:
+    except Exception as e:
         print e
         sys.exit(1)
