@@ -144,12 +144,10 @@ def main():
     # Display CAPTCHA using image viewer of choice.
     print 'Image viewer has been launched to display CAPTCHA.'
     os.system('%s %s > /dev/null 2>&1 &' % (imageviewer, captcha_url))  # TODO: very unsafe, fix
-    captcha = raw_input('Please enter CAPTCHA: ').strip()
-    if captcha == '':
-        print 'Error: CAPTCHA may not be empty.'
-        return 1
-
-
+    captcha = ''
+    while (captcha == ''):
+        captcha = raw_input('Please enter CAPTCHA: ').strip()
+    
     # Log in
     try:
         b.addheaders = [
