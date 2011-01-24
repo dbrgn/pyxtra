@@ -24,6 +24,7 @@ import os
 import sys
 import urllib
 import re
+import getpass
 import ConfigParser
 
 import json
@@ -64,7 +65,7 @@ def parse_config():
         username = raw_input('\nXtrazone username: ').strip()
         print '\nEnter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
-        password = raw_input('Xtrazone password (<enter> to skip): ').strip()
+        password = getpass.getpass('Xtrazone password (<enter> to skip): ').strip()
         print '\nPlease choose your preferred image viewer. On Ubuntu, we ' \
               'suggest "eog", which is installed by default.'
         imageviewer = raw_input('Image viewer: ').strip()
