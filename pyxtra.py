@@ -38,7 +38,13 @@ _debug = False        # Set to True to show debug output
 
 class XtrazoneError(Exception):
     """Exception related with the Xtrazone page."""
-    pass
+    def __init__(self, message):
+        self._message = message
+    def _get_message(self): 
+        return self._message
+    def _set_message(self, message): 
+        self._message = message
+    message = property(_get_message, _set_message)
 
 
 def parse_config():
@@ -56,9 +62,9 @@ def parse_config():
     if not len(config.read(os.path.expanduser(config_file))):
         print 'Could not find configuration file. Creating %s.' % config_file
         username = raw_input('\nXtrazone username: ').strip()
-        print '\nEnter your password, in case you want to store it in the ' \
+        print 'Enter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
-        password = getpass.getpass('Xtrazone password (<enter> to skip): ').strip()
+        password = getpass.getpass('Xtrazone password (ENTER to skip): ').strip()
         print '\nPlease choose your preferred image viewer. On Ubuntu, we ' \
               'suggest "eog", which is installed by default.'
         imageviewer = raw_input('Image viewer: ').strip()
@@ -111,7 +117,8 @@ def login(browser, username, password, imageviewer):
             ('X-Header-XtraZone', 'XtraZone'),
             ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
             ]
-    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Flogin%2Fgetcaptcha'
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+           '?route=%2Flogin%2Fgetcaptcha'
     data = {'action': 'getCaptcha',
             'do_sso_login': 0,
             'passphrase': '',
@@ -147,7 +154,7 @@ def login(browser, username, password, imageviewer):
             }
     browser.open(url, urllib.urlencode(data))
 
-    resp = json.loads(browser.response().read())  # Convert response to dictionary
+    resp = json.loads(browser.response().read())
     if resp['status'] == 'login_failed':
         raise XtrazoneError('Login failed: '.join(resp['message']))
 
@@ -157,8 +164,9 @@ def get_user_info(browser):
     
     Return nickname, full name and remaining SMS/MMS.
     """
-    browser.open('https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
-    resp = json.loads(browser.response().read())  # Convert response to dictionary
+    browser.open('https://xtrazone.sso.bluewin.ch/index.php/' \
+                 '20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
+    resp = json.loads(browser.response().read())
 
     # Parse HTML
     html = resp['content']
@@ -179,9 +187,11 @@ def send_sms(browser):
     
     Query for cell phone number and message and send SMS.
     """
-    receiver = raw_input('Receiver Nr: ').strip() # TODO: validate
+    receiver = raw_input('Receiver Nr: ')
+    receiver = re.compile('[^\d+]').sub('', receiver)  # Validate
     message = raw_input('Message: ').strip()
-    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+          '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
     data = {'attachmentId': '',
             'attachments': '',
             'messagebody': message,
@@ -189,7 +199,7 @@ def send_sms(browser):
             'recipients': '[]',
             }
     browser.open(url, urllib.urlencode(data))
-    resp = json.loads(browser.response().read())  # Convert response to dict
+    resp = json.loads(browser.response().read())
     if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
         resp['content']['isError'] != False):
         raise XtrazoneError('Unknown error sending SMS.') # TODO: check for possible errors
@@ -214,5 +224,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        print e
+        print 'Error: ' + e.message
         sys.exit(1)
