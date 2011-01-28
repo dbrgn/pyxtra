@@ -38,13 +38,7 @@ _debug = False        # Set to True to show debug output
 
 class XtrazoneError(Exception):
     """Exception related with the Xtrazone page."""
-    def __init__(self, message):
-        self._message = message
-    def _get_message(self): 
-        return self._message
-    def _set_message(self, message): 
-        self._message = message
-    message = property(_get_message, _set_message)
+    pass
 
 
 def parse_config():
@@ -99,9 +93,9 @@ def init():
             ]
     # Debugging stuff
     if _debug:
-        b.setdebug_http(True)
-        b.setdebug_redirects(True)
-        b.setdebug_responses(True)
+        b.set_debug_http(True)
+        b.set_debug_redirects(True)
+        b.set_debug_responses(True)
     return b
 
 
@@ -224,5 +218,5 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        print 'Error: ' + e.message
+        print 'Error: ' + str(e)
         sys.exit(1)
