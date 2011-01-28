@@ -37,7 +37,11 @@ _debug = False        # Set to True to show debug output
 
 
 class XtrazoneError(Exception):
-    """Exception related with the Xtrazone page."""
+    """Errors related with the Xtrazone page."""
+    pass
+
+class CaptchaError(XtrazoneError):
+    """Errors related with the CAPTCHA."""
     pass
 
 
@@ -149,7 +153,9 @@ def login(browser, username, password, imageviewer):
     browser.open(url, urllib.urlencode(data))
 
     resp = json.loads(browser.response().read())
-    if resp['status'] == 'login_failed':
+    if resp['status'] == 'captcha_failed':
+        raise CaptchaError('CAPTCHA failed: '.join(resp['message']))
+    if resp['status'] != 'login_ok':
         raise XtrazoneError('Login failed: '.join(resp['message']))
 
 
@@ -209,7 +215,12 @@ def main():
     browser = init()
 
     # Display CAPTCHA and log in
-    login(browser, username, password, imageviewer)
+    while(1):
+        try:
+            login(browser, username, password, imageviewer)
+            break
+        except CaptchaError as e:
+            print 'Wrong captcha. Try again.'
 
     # Send SMS
     send_sms(browser)
