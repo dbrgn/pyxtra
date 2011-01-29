@@ -162,7 +162,7 @@ def login(browser, username, password, imageviewer):
 def get_user_info(browser):
     """Retrieve user info.
     
-    Return nickname, full name and remaining SMS/MMS.
+    Return nickname, full name and remaining SMS.
     """
     browser.open('https://xtrazone.sso.bluewin.ch/index.php/' \
                  '20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
@@ -218,7 +218,8 @@ def send_sms(browser):
         raise XtrazoneError('Unknown error sending SMS.')
 
     # Show success message
-    print resp['content']['messages']['generic'][0]
+    #print resp['content']['messages']['generic'][0]
+    print 'SMS sent successfully.'
 
 
 def main():
@@ -237,7 +238,14 @@ def main():
             print 'Wrong captcha. Try again.'
 
     # Send SMS
-    send_sms(browser)
+    nickname, fullname, remaining = get_user_info(browser)
+    print 'Hi, %s. You have %s SMS remaining.' % (fullname, remaining)
+    while(1):
+        send_sms(browser)
+        print "%s SMS remaining." % get_user_info(browser)[2]
+        if raw_input("Send another SMS? (y/N) ").lower() != 'y':
+            break
+    print 'Goodbye.'
 
 
 if __name__ == '__main__':
