@@ -10,7 +10,7 @@ Requirements
 - python2
 - python-mechanize
 - python-beautifulsoup
-- python-simplejson
+- python-simplejson (for python < 2.6 only)
 
 
 Changelog
