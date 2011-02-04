@@ -189,9 +189,9 @@ def send_sms(browser):
     Query for cell phone number and message and send SMS.
     """
     while True:
-        receiver = raw_input('Receiver Nr: ')
-        receiver = re.compile('[^\d+]').sub('', receiver)
-        if not 10 <= len(receiver) <= 13:
+        receiver = raw_input('Receiver Nr(s): ')
+        receiver = re.compile('[^\d+,]').sub('', receiver)
+        if not 10 <= len(receiver):
             print 'Invalid length of number. Example format: 079 123 45 78'
         else:
             break
