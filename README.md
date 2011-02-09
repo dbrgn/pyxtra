@@ -11,6 +11,7 @@ Requirements
 - python-mechanize
 - python-beautifulsoup
 - python-simplejson (for python < 2.6 only)
+- python-xlrd
 
 
 Changelog

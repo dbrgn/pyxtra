@@ -27,13 +27,21 @@ import re
 import getpass
 import ConfigParser
 
-import json
-import mechanize
-from BeautifulSoup import BeautifulSoup
+try:
+    import json
+    import mechanize
+    from BeautifulSoup import BeautifulSoup
+    import xlrd
+except ImportError as e:
+    module = e.message[16:]
+    print 'Python module %s not found. Install it using pip or your ' \
+          'system\'s package manager.' % module
+    sys.exit(1)
 
 
 # Some configuration variables
 _debug = False        # Set to True to show debug output
+separator = '--------------------'
 
 
 class XtrazoneError(Exception):
@@ -183,6 +191,32 @@ def get_user_info(browser):
     return nickname, fullname, remaining
 
 
+def pull_contacts(browser):
+    """Retrieve contact list.
+
+    Retrieves an .xls-export of all contacts, parses it and returns a list.
+    """
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,98/?route=' \
+          '%2Fprofile%2Fcontact%2Fexcelexport&suspAjax=1'
+    browser.open(url)
+    resp = browser.response().read()
+    book = xlrd.open_workbook(file_contents=resp)
+    sheet = book.sheet_by_index(0)
+    contacts = map(lambda row: sheet.row_values(row), range(1, sheet.nrows))
+    return contacts
+
+def print_contacts(contacts):
+    """Print nicely formatted contact list."""
+    def natel_nr(nr):
+        nr = str(nr)[2:11]
+        return '0%s %s %s %s' % (nr[0:2], nr[2:5], nr[5:7], nr[7:9])
+
+    print separator
+    for contact in contacts:
+        print '%s: %s' % (contact[2].strip(), natel_nr(contact[1]))
+    print separator
+
+
 def send_sms(browser):
     """Send SMS.
     
@@ -237,14 +271,31 @@ def main():
         except CaptchaError as e:
             print 'Wrong captcha. Try again.'
 
-    # Send SMS
+    # Get contacts
+    print 'Retrieving contacts...'
+    contacts = pull_contacts(browser)
+
+    # Show welcome message
     nickname, fullname, remaining = get_user_info(browser)
     print 'Hi, %s. You have %s SMS remaining.' % (fullname, remaining)
+
+    # Main menu
     while(1):
-        send_sms(browser)
-        print "%s SMS remaining." % get_user_info(browser)[2]
-        if raw_input("Send another SMS? (y/N) ").lower() != 'y':
+        msg = "Press 'n' to compose an sms, 'c' to show contacts, " \
+              "'s' to search contacts or 'e' to exit: "
+        choice = raw_input(msg).strip().lower()
+        if choice == 'n':
+            send_sms(browser)
+            print "%s SMS remaining." % get_user_info(browser)[2]
+        elif choice == 'c':
+            print_contacts(contacts)
+        elif choice == 's':
+            searchstr = raw_input("Enter a search string: ")
+            fcontacts = lambda x: x[2].lower().find(searchstr.lower()) != -1
+            print_contacts(filter(fcontacts, contacts))
+        elif choice == 'e':
             break
+
     print 'Goodbye.'
 
 
