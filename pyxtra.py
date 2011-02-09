@@ -26,6 +26,7 @@ import urllib
 import re
 import getpass
 import ConfigParser
+import unicodedata
 
 try:
     import json
@@ -40,7 +41,7 @@ except ImportError as e:
 
 
 # Some configuration variables
-_debug = False        # Set to True to show debug output
+_debug = False  # Set to True to show debug output
 separator = '--------------------'
 
 
@@ -52,6 +53,14 @@ class CaptchaError(XtrazoneError):
     """Errors related with the CAPTCHA."""
     pass
 
+
+def remove_accents(ustr):
+    """Removes accents from an unicode string.
+
+    Strips all accents by removing the precomposed unicode characters. String
+    to convert should be in unicode format."""
+    nkfd_form = unicodedata.normalize('NFKD', unicode(ustr))
+    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
 def parse_config():
     """Parse the configuration file."""
@@ -203,7 +212,7 @@ def pull_contacts(browser):
     book = xlrd.open_workbook(file_contents=resp)
     sheet = book.sheet_by_index(0)
     contacts = map(lambda row: sheet.row_values(row), range(1, sheet.nrows))
-    return contacts
+    return sorted(contacts, key=lambda c: c[2])
 
 def print_contacts(contacts):
     """Print nicely formatted contact list."""
@@ -282,7 +291,7 @@ def main():
     # Main menu
     while(1):
         msg = "Press 'n' to compose an sms, 'c' to show contacts, " \
-              "'s' to search contacts or 'e' to exit: "
+              "'s' to search contacts or 'x' to exit: "
         choice = raw_input(msg).strip().lower()
         if choice == 'n':
             send_sms(browser)
@@ -290,10 +299,11 @@ def main():
         elif choice == 'c':
             print_contacts(contacts)
         elif choice == 's':
-            searchstr = raw_input("Enter a search string: ")
+            searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
+            searchstr = remove_accents(searchstr)
             fcontacts = lambda x: x[2].lower().find(searchstr.lower()) != -1
             print_contacts(filter(fcontacts, contacts))
-        elif choice == 'e':
+        elif choice == 'x':
             break
 
     print 'Goodbye.'
