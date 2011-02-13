@@ -34,7 +34,7 @@ try:
     from BeautifulSoup import BeautifulSoup
     import xlrd
 except ImportError as e:
-    module = e.message[16:]
+    module = str(e)[16:]
     print 'Python module %s not found. Install it using pip or your ' \
           'system\'s package manager.' % module
     sys.exit(1)
@@ -171,9 +171,9 @@ def login(browser, username, password, imageviewer):
 
     resp = json.loads(browser.response().read())
     if resp['status'] == 'captcha_failed':
-        raise CaptchaError('CAPTCHA failed: '.join(resp['message']))
+        raise CaptchaError('CAPTCHA failed: %s' % resp['message'])
     if resp['status'] != 'login_ok':
-        raise XtrazoneError('Login failed: '.join(resp['message']))
+        raise XtrazoneError('Login failed: %s' % resp['message'])
 
 
 def get_user_info(browser):
@@ -213,6 +213,32 @@ def pull_contacts(browser):
     sheet = book.sheet_by_index(0)
     contacts = map(lambda row: sheet.row_values(row), range(1, sheet.nrows))
     return sorted(contacts, key=lambda c: c[2])
+
+
+def add_contact(browser, prename='', name='', nr=''):
+    """Add a new contact to the XtraZone address book"""
+    while prename == '': prename = raw_input('First name: ').strip()
+    if name == '': name = raw_input('Name: ').strip()
+    while nr == '': nr = raw_input('Nr: ').strip()
+    
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=' \
+          '%2Fprofile%2Fcontact%2Faddcontact&refresh=/profile/contact/list'
+    data = {'contactId': '',
+            'name': name,
+            'natelnr': nr,
+            'prename': prename,
+            'save': 'Speichern',
+            }
+    browser.open(url, urllib.urlencode(data))
+
+    resp = json.loads(browser.response().read())
+    resp['content']
+
+    if resp['content']['isError'] == True:
+        raise XtrazoneError(
+                'Adding contact failed: %s' % resp['content']['headline'])
+    print 'Successfully saved contact %s %s.' % (prename, name)
+    
 
 def print_contacts(contacts):
     """Print nicely formatted contact list."""
@@ -291,13 +317,19 @@ def main():
     # Main menu
     while(1):
         msg = "Press 'n' to compose an sms, 'c' to show contacts, " \
-              "'s' to search contacts or 'x' to exit: "
+              "'s' to search contacts, 'a' to add a contact or 'x' to exit: "
         choice = raw_input(msg).strip().lower()
         if choice == 'n':
             send_sms(browser)
             print "%s SMS remaining." % get_user_info(browser)[2]
         elif choice == 'c':
             print_contacts(contacts)
+        elif choice == 'a':
+            try:            
+                add_contact(browser)
+                contacts = pull_contacts(browser)
+            except XtrazoneError as e:
+                print 'Error: ' + str(e)
         elif choice == 's':
             searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
             searchstr = remove_accents(searchstr)
