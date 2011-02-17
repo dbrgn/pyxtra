@@ -29,6 +29,7 @@ import ConfigParser
 import unicodedata
 
 try:
+    import readline
     import json
     import mechanize
     from BeautifulSoup import BeautifulSoup
@@ -211,7 +212,7 @@ def pull_contacts(browser):
     resp = browser.response().read()
     book = xlrd.open_workbook(file_contents=resp)
     sheet = book.sheet_by_index(0)
-    contacts = map(lambda row: sheet.row_values(row), range(1, sheet.nrows))
+    contacts = [sheet.row_values(row) for row in range(1, sheet.nrows)]
     return sorted(contacts, key=lambda c: c[2])
 
 
@@ -252,19 +253,50 @@ def print_contacts(contacts):
     print separator
 
 
-def send_sms(browser):
+def send_sms(browser, contacts):
     """Send SMS.
     
     Query for cell phone number and message and send SMS.
     """
-    while True:
-        receiver = raw_input('Receiver Nr(s): ')
-        receiver = re.compile('[^\d+,]').sub('', receiver)
-        if not 10 <= len(receiver):
-            print 'Invalid length of number. Example format: 079 123 45 78'
+
+    # Configure and enable tab completion
+    def completer(text, state):
+        """Contacts completer function for readline module"""
+        options = [x[2].strip() for x in contacts
+                   if x[2].lower().startswith(text.strip().lower())]
+        try:
+            return options[state]
+        except IndexError:
+            return None
+    readline.set_completer(completer)
+    readline.set_completer_delims(',')
+    readline.parse_and_bind('tab: complete')
+
+    def replace_contacts(text):
+        """Replace contacts with corresponding cell phone numbers."""
+        numbers = text.split(',')
+        for nr in numbers:
+            f = filter(lambda c: c[2].strip().lower() == nr.strip().lower(),
+                       contacts)
+            try:
+                text = text.replace(nr, '0' + str(f[0][1])[2:11])
+            except IndexError:
+                pass
+        return text
+
+    # Get receiver number(s)
+    while 1:
+        receiver = raw_input('Receiver(s): ')
+        receiver_clean = replace_contacts(receiver)
+        # Test whether all contacts have been matched
+        if not re.sub('[ +,]', '', receiver_clean).isdigit():
+            print 'Unmatched contact or invalid phone number. ' + \
+                   'Only comma separated contact names or numbers are allowed.'
         else:
+            readline.set_completer()  # Disable tab completion
             break
-    while True:
+    # Get message text
+    while 1:
         message = raw_input('Message: ').strip()
         if len(message) == 0:
             print 'Please enter a message'
@@ -272,12 +304,14 @@ def send_sms(browser):
             print 'Message too long (max 440 characters)'
         else:
             break
+
+    # Actually send the SMS
     url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
           '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
     data = {'attachmentId': '',
             'attachments': '',
             'messagebody': message,
-            'receiversnames': receiver,
+            'receiversnames': receiver_clean,
             'recipients': '[]',
             }
     browser.open(url, urllib.urlencode(data))
@@ -320,7 +354,7 @@ def main():
               "'s' to search contacts, 'a' to add a contact or 'x' to exit: "
         choice = raw_input(msg).strip().lower()
         if choice == 'n':
-            send_sms(browser)
+            send_sms(browser, contacts)
             print "%s SMS remaining." % get_user_info(browser)[2]
         elif choice == 'c':
             print_contacts(contacts)
