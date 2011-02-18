@@ -65,17 +65,17 @@ def remove_accents(ustr):
 
 def parse_config():
     """Parse the configuration file."""
-    config_folder = '~/.pyxtra'  # Folder that will contain all configfiles
-    config_file = os.path.expanduser(config_folder + '/config')
+    config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))  # Folder that will contain all configfiles
+    config_file = os.path.join(config_folder, 'config')
 
     config = ConfigParser.ConfigParser()  # ConfigParser instance
 
     # Create folder if necessary
-    if not os.path.isdir(os.path.expanduser(config_folder)):
-        os.mkdir(os.path.expanduser(config_folder))
+    if not os.path.isdir(config_folder):
+        os.mkdir(config_folder)
 
     # Read config, write default config file if it doesn't exist yet.
-    if not len(config.read(os.path.expanduser(config_file))):
+    if not len(config.read(config_file)):
         print 'Could not find configuration file. Creating %s.' % config_file
         username = raw_input('\nXtrazone username: ').strip()
         print 'Enter your password, in case you want to store it in the ' \
@@ -90,7 +90,7 @@ def parse_config():
         config.set('settings', 'username', username)
         config.set('settings', 'password', password)
         config.set('settings', 'imageviewer', imageviewer)
-        config.write(open(os.path.expanduser(config_file), 'w'))
+        config.write(open(config_file, 'w'))
     else:
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
@@ -123,8 +123,8 @@ def init():
 
 def login(browser, username, password, imageviewer):
     """Display the CAPTCHA and log in."""
-    if (password==''):
-        password = raw_input('password: ').strip()
+    if password == '':
+        password = raw_input('Xtrazone password: ').strip()
 
     # Get CAPTCHA URL
     browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
