@@ -354,8 +354,12 @@ def main():
               "'s' to search contacts, 'a' to add a contact or 'x' to exit: "
         choice = raw_input(msg).strip().lower()
         if choice == 'n':
-            send_sms(browser, contacts)
-            print "%s SMS remaining." % get_user_info(browser)[2]
+            try:
+                send_sms(browser, contacts)
+                print "%s SMS remaining." % get_user_info(browser)[2]
+            except KeyboardInterrupt:
+                print 'Cancel...'
+                continue
         elif choice == 'c':
             print_contacts(contacts)
         elif choice == 'a':
