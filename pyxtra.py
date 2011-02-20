@@ -27,7 +27,8 @@ import re
 import getpass
 import ConfigParser
 import unicodedata
-import StringIO
+from StringIO import StringIO
+from datetime import datetime
 
 try:
     import readline
@@ -74,6 +75,7 @@ def parse_config():
     """Parse the configuration file."""
     config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))  # Folder that will contain all configfiles
     config_file = os.path.join(config_folder, 'config')
+    log_file = os.path.join(config_folder, 'sent.log')
 
     config = ConfigParser.ConfigParser()  # ConfigParser instance
 
@@ -88,17 +90,23 @@ def parse_config():
         print 'Enter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
         password = getpass.getpass('Xtrazone password (ENTER to skip): ').strip()
+        logging_msg = 'Do you want to log all sent sms to %s? [y/n]: ' % log_file
+        logging = ''
+        while logging not in ['y', 'n']:
+            logging = raw_input(logging_msg).strip().lower()
         print 'Initial configuration is finished.\n'
 
         config.add_section('settings')
         config.set('settings', 'username', username)
         config.set('settings', 'password', password)
+        config.set('settings', 'logging', logging)
         config.write(open(config_file, 'w'))
     else:
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
+        logging = config.get('settings', 'logging')
 
-    return username, password
+    return username, password, logging
    
 
 def init():
@@ -153,7 +161,7 @@ def login(browser, username, password):
     tk_root = Tk(className='CAPTCHA')
     img = ImageTk.PhotoImage(
             Image.open(
-              StringIO.StringIO(
+              StringIO(
                 urllib.urlopen(captcha_url).read()
               )
             )
@@ -271,7 +279,7 @@ def print_contacts(contacts):
     print separator
 
 
-def send_sms(browser, contacts):
+def send_sms(browser, contacts=[], logging='n'):
     """Send SMS.
     
     Query for cell phone number and message and send SMS.
@@ -338,6 +346,17 @@ def send_sms(browser, contacts):
         resp['content']['isError'] != False):
         raise XtrazoneError('Unknown error sending SMS.')
 
+    # If desired, log SMS
+    if logging == 'y':
+        pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
+        log_file = os.path.join(pyxtra_folder, 'sent.log')
+        f = open(log_file, 'a')  # Open file for appending
+        print >>f, 'Date: %s' % datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        print >>f, 'Receivers (original): %s' % receiver
+        print >>f, 'Receivers (cleaned): %s' % receiver_clean
+        print >>f, 'Message: %s\n' % message
+        f.close()
+
     # Show success message
     #print resp['content']['messages']['generic'][0]
     print 'SMS sent successfully.'
@@ -345,7 +364,7 @@ def send_sms(browser, contacts):
 
 def main():
     # Parse configuration file
-    username, password = parse_config()
+    username, password, logging = parse_config()
 
     # Initialize mechanize browser session
     browser = init()
@@ -373,7 +392,7 @@ def main():
         choice = raw_input(msg).strip().lower()
         if choice == 'n':
             try:
-                send_sms(browser, contacts)
+                send_sms(browser, contacts, logging)
                 print "%s SMS remaining." % get_user_info(browser)[2]
             except KeyboardInterrupt:
                 print 'Cancel...'
