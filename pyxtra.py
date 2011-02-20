@@ -27,6 +27,7 @@ import re
 import getpass
 import ConfigParser
 import unicodedata
+import StringIO
 
 try:
     import readline
@@ -34,8 +35,14 @@ try:
     import mechanize
     from BeautifulSoup import BeautifulSoup
     import xlrd
+    from Tkinter import *
+    from PIL import Image, ImageTk
 except ImportError as e:
-    module = str(e)[16:]
+    e_split = str(e)[16:].split(',')
+    try:
+        module = re.search(r'the (.+) package', e_split[1]).group(1)
+    except IndexError:
+        module = str(e)[16:]
     print 'Python module %s not found. Install it using pip or your ' \
           'system\'s package manager.' % module
     sys.exit(1)
@@ -81,22 +88,17 @@ def parse_config():
         print 'Enter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
         password = getpass.getpass('Xtrazone password (ENTER to skip): ').strip()
-        print '\nPlease choose your preferred image viewer. On Ubuntu, we ' \
-              'suggest "eog", which is installed by default.'
-        imageviewer = raw_input('Image viewer: ').strip()
         print 'Initial configuration is finished.\n'
 
         config.add_section('settings')
         config.set('settings', 'username', username)
         config.set('settings', 'password', password)
-        config.set('settings', 'imageviewer', imageviewer)
         config.write(open(config_file, 'w'))
     else:
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
-        imageviewer = config.get('settings', 'imageviewer')
 
-    return username, password, imageviewer
+    return username, password
    
 
 def init():
@@ -121,7 +123,7 @@ def init():
     return b
 
 
-def login(browser, username, password, imageviewer):
+def login(browser, username, password):
     """Display the CAPTCHA and log in."""
     if password == '':
         password = raw_input('Xtrazone password: ').strip()
@@ -147,12 +149,28 @@ def login(browser, username, password, imageviewer):
     captcha_url = 'http:' + resp['content']['messages']['operation']['imgUrl']
     captcha_token = resp['content']['messages']['operation']['token']
     
-    # Display CAPTCHA using image viewer of choice.
-    print 'Image viewer has been launched to display CAPTCHA.'
-    os.system('%s %s > /dev/null 2>&1 &' % (imageviewer, captcha_url))
+    # Display CAPTCHA in a new window
+    tk_root = Tk(className='CAPTCHA')
+    img = ImageTk.PhotoImage(
+            Image.open(
+              StringIO.StringIO(
+                urllib.urlopen(captcha_url).read()
+              )
+            )
+          )
+    captcha_label = Label(tk_root, image=img)
+    captcha_label.pack()
+
+    # Get CAPTCHA text
     captcha = ''
     while captcha == '':
         captcha = raw_input('Please enter CAPTCHA: ').strip()
+
+    # Destroy CAPTCHA window
+    try:
+        tk_root.destroy()
+    except:
+        pass
     
     # Log in
     browser.addheaders = [
@@ -327,7 +345,7 @@ def send_sms(browser, contacts):
 
 def main():
     # Parse configuration file
-    username, password, imageviewer = parse_config()
+    username, password = parse_config()
 
     # Initialize mechanize browser session
     browser = init()
@@ -335,7 +353,7 @@ def main():
     # Display CAPTCHA and log in
     while(1):
         try:
-            login(browser, username, password, imageviewer)
+            login(browser, username, password)
             break
         except CaptchaError as e:
             print 'Wrong captcha. Try again.'
