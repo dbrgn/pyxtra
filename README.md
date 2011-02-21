@@ -12,6 +12,8 @@ Requirements
 - python-beautifulsoup
 - python-simplejson (for python < 2.6 only)
 - python-xlrd
+- python-tk
+- python-imaging
 
 
 Changelog
