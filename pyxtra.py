@@ -36,7 +36,7 @@ try:
     import mechanize
     from BeautifulSoup import BeautifulSoup
     import xlrd
-    from Tkinter import *
+    import Tkinter
     from PIL import Image, ImageTk
 except ImportError as e:
     e_split = str(e)[16:].split(',')
@@ -50,7 +50,7 @@ except ImportError as e:
 
 
 # Some configuration variables
-_debug = False  # Set to True to show debug output
+__debug = False  # Set to True to show debug output
 separator = '--------------------'
 
 
@@ -73,7 +73,8 @@ def remove_accents(ustr):
 
 def parse_config():
     """Parse the configuration file."""
-    config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))  # Folder that will contain all configfiles
+    # Folder that will contain all configfiles
+    config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
     config_file = os.path.join(config_folder, 'config')
     log_file = os.path.join(config_folder, 'sent.log')
 
@@ -121,10 +122,11 @@ def init():
     b.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
     # User agent
     b.addheaders = [
-            ('User-agent', 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)'),
+            ('User-agent', 'Mozilla/4.0 (compatible; MSIE 8.0; \
+                            Windows NT 6.0; Trident/4.0)'),
             ]
     # Debugging stuff
-    if _debug:
+    if __debug:
         b.set_debug_http(True)
         b.set_debug_redirects(True)
         b.set_debug_responses(True)
@@ -158,7 +160,7 @@ def login(browser, username, password):
     captcha_token = resp['content']['messages']['operation']['token']
     
     # Display CAPTCHA in a new window
-    tk_root = Tk(className='CAPTCHA')
+    tk_root = Tkinter.Tk(className='CAPTCHA')
     img = ImageTk.PhotoImage(
             Image.open(
               StringIO(
@@ -166,7 +168,7 @@ def login(browser, username, password):
               )
             )
           )
-    captcha_label = Label(tk_root, image=img)
+    captcha_label = Tkinter.Label(tk_root, image=img)
     captcha_label.pack()
 
     # Get CAPTCHA text
@@ -177,7 +179,7 @@ def login(browser, username, password):
     # Destroy CAPTCHA window
     try:
         tk_root.destroy()
-    except:
+    except Tkinter.TclError:
         pass
     
     # Log in
@@ -244,9 +246,12 @@ def pull_contacts(browser):
 
 def add_contact(browser, prename='', name='', nr=''):
     """Add a new contact to the XtraZone address book"""
-    while prename == '': prename = raw_input('First name: ').strip()
-    if name == '': name = raw_input('Name: ').strip()
-    while nr == '': nr = raw_input('Nr: ').strip()
+    while prename == '':
+        prename = raw_input('First name: ').strip()
+    if name == '':
+        name = raw_input('Name: ').strip()
+    while nr == '':
+        nr = raw_input('Nr: ').strip()
     
     url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=' \
           '%2Fprofile%2Fcontact%2Faddcontact&refresh=/profile/contact/list'
@@ -270,6 +275,7 @@ def add_contact(browser, prename='', name='', nr=''):
 def print_contacts(contacts):
     """Print nicely formatted contact list."""
     def natel_nr(nr):
+        """Return correctly formatted cell phone nr."""
         nr = str(nr)[2:11]
         return '0%s %s %s %s' % (nr[0:2], nr[2:5], nr[5:7], nr[7:9])
 
@@ -302,8 +308,8 @@ def send_sms(browser, contacts=[], logging='n'):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
         for nr in numbers:
-            f = filter(lambda c: c[2].strip().lower() == nr.strip().lower(),
-                       contacts)
+            f = [c for c in contacts
+                   if c[2].strip().lower() == nr.strip().lower()]
             try:
                 text = text.replace(nr, '0' + str(f[0][1])[2:11])
             except IndexError:
@@ -351,10 +357,10 @@ def send_sms(browser, contacts=[], logging='n'):
         pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
         log_file = os.path.join(pyxtra_folder, 'sent.log')
         f = open(log_file, 'a')  # Open file for appending
-        print >>f, 'Date: %s' % datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-        print >>f, 'Receivers (original): %s' % receiver
-        print >>f, 'Receivers (cleaned): %s' % receiver_clean
-        print >>f, 'Message: %s\n' % message
+        print >> f, 'Date: %s' % datetime.now().strftime('%d.%m.%Y %H:%M:%S')
+        print >> f, 'Receivers (original): %s' % receiver
+        print >> f, 'Receivers (cleaned): %s' % receiver_clean
+        print >> f, 'Message: %s\n' % message
         f.close()
 
     # Show success message
@@ -363,6 +369,12 @@ def send_sms(browser, contacts=[], logging='n'):
 
 
 def main():
+    """Main program loop.
+
+    Parses the configuration, initializes the mechanize-browser, calls all
+    functions to log in and shows a looped interface to send SMS messages and
+    show or add contacts.
+    """
     # Parse configuration file
     username, password, logging = parse_config()
 
