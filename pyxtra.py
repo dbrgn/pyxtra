@@ -4,6 +4,8 @@
 """A small commandline utility written in Python to access the Swisscom
 Xtrazone SMS service
 
+Version: 1.0
+
 License:
 Copyright (C) 2011 Danilo Bargen, Peter Manser
 
@@ -397,38 +399,64 @@ def main():
     nickname, fullname, remaining = get_user_info(browser)
     print 'Hi, %s. You have %s SMS remaining.' % (fullname, remaining)
 
+    def print_help():
+        print 'Available commands:'
+        print '\tn, new -- Compose an SMS'
+        print '\tc, contacts -- Show contacts'
+        print '\ts, search -- Search contacts'
+        print '\ta, add -- Add a new contact'
+        print '\tq, quit -- Quit'
+        print '\th, help -- Show this help'
+
     # Main menu
+    print "Enter 'h' or 'help' to show available commands."
     while(1):
-        msg = "Press 'n' to compose an sms, 'c' to show contacts, " \
-              "'s' to search contacts, 'a' to add a contact or 'x' to exit: "
-        choice = raw_input(msg).strip().lower()
-        if choice == 'n':
+        choice = raw_input('> ').strip().lower()
+        if choice in ['h', 'help']:
+            print_help()
+        elif choice in ['n', 'new']:
             try:
                 send_sms(browser, contacts, logging)
                 print "%s SMS remaining." % get_user_info(browser)[2]
             except KeyboardInterrupt:
-                print 'Cancel...'
+                print '\nCancel...'
                 continue
-        elif choice == 'c':
+        elif choice in ['c', 'contacts']:
             print_contacts(contacts)
-        elif choice == 'a':
+        elif choice in ['a', 'add']:
             try:            
                 add_contact(browser)
                 contacts = pull_contacts(browser)
+            except KeyboardInterrupt:
+                print '\nCancel...'
+                continue
             except XtrazoneError as e:
                 print 'Error: ' + str(e)
-        elif choice == 's':
-            searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
+        elif choice in ['s', 'search']:
+            try:
+                searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
+            except KeyboardInterrupt:
+                print '\nCancel...'
+                continue
             searchstr = remove_accents(searchstr)
             fcontacts = lambda x: x[2].lower().find(searchstr.lower()) != -1
             print_contacts(filter(fcontacts, contacts))
-        elif choice == 'x':
+        elif choice in ['x', 'q', 'exit', 'quit']:
             break
+        else:
+            print "Unknown command. Use 'help' to show all commands."
 
     print 'Goodbye.'
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        if sys.argv[1] in ['-v', '--version', '-h', '--help']:
+            print __doc__
+        else:
+            print 'pyxtra is an interactive application and does not ' \
+                  'support any commandline arguments.'
+        sys.exit(1)
     try:
         main()
     except Exception as e:
