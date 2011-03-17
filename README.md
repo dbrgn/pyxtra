@@ -25,19 +25,20 @@ Installation
 
         sudo pip install BeautifulSoup PIL mechanize xlrd
 
-    Ubuntu should do it this way instead:
+    Ubuntu users should use apt instead of pip:
 
         sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging
 
 3. Install pyxtra
 
-    sudo python setup.py install
+        sudo python setup.py install
 
 
 Changelog
 ---------
 
-v1.0
+v1.0 (2011-03-17)
+
 - First version released
 
 
