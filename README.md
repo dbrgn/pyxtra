@@ -25,7 +25,7 @@ Installation
 
         sudo pip install BeautifulSoup PIL mechanize xlrd
 
-    Ubuntu should do it this way instead:
+    Ubuntu users should use apt instead of pip:
 
         sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging
 
