@@ -37,7 +37,8 @@ Installation
 Changelog
 ---------
 
-v1.0
+v1.0 (2011-03-17)
+
 - First version released
 
 
