@@ -54,6 +54,7 @@ except ImportError as e:
 
 # Some configuration variables
 __debug = False  # Set to True to show debug output
+__fakesend = True # Set to True to not send sms
 separator = '--------------------'
 
 
@@ -336,28 +337,33 @@ def send_sms(browser, contacts=[], logging='n'):
     # Get message text
     while 1:
         message = raw_input('Message: ').strip()
-        if len(message) == 0:
+        if not message:
             print 'Please enter a message'
         elif len(unicode(message, 'utf-8')) > 440:
             print 'Message too long (max 440 characters)'
         else:
             break
-
-    # Actually send the SMS
-    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
-          '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
-    data = {'attachmentId': '',
-            'attachments': '',
-            'messagebody': message,
-            'receiversnames': receiver_clean,
-            'recipients': '[]',
-            }
-    browser.open(url, urllib.urlencode(data))
-    resp = json.loads(browser.response().read())
-    if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
-        resp['content']['isError'] != False):
-        raise XtrazoneError('Unknown error sending SMS.')
-
+    
+    if not __fakesend:
+        # Actually send the SMS
+        url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+              '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+        data = {'attachmentId': '',
+                'attachments': '',
+                'messagebody': message,
+                'receiversnames': receiver_clean,
+                'recipients': '[]',
+                }
+        browser.open(url, urllib.urlencode(data))
+        resp = json.loads(browser.response().read())
+        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+            resp['content']['isError'] != False):
+            raise XtrazoneError('Unknown error sending SMS.')
+        # Show success message
+        print 'SMS sent successfully.'
+    else:
+        print 'SMS won\'t be send, because fakesend is activated.'
+    
     # If desired, log SMS
     if logging == 'y':
         pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
@@ -368,12 +374,7 @@ def send_sms(browser, contacts=[], logging='n'):
         print >> f, 'Receivers (cleaned): %s' % receiver_clean
         print >> f, 'Message: %s\n' % message
         f.close()
-
-    # Show success message
-    #print resp['content']['messages']['generic'][0]
-    print 'SMS sent successfully.'
-
-
+    
 def main():
     """Main program loop.
 
