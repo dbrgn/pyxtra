@@ -54,7 +54,7 @@ except ImportError as e:
 
 # Some configuration variables
 __debug = False  # Set to True to show debug output
-__fakesend = True # Set to True to not send sms
+__fakesend = False # Set to True to not send sms
 separator = '--------------------'
 
 
