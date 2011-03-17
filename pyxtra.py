@@ -307,7 +307,7 @@ def send_sms(browser, contacts=[], logging='n'):
     readline.set_completer(completer)
     readline.set_completer_delims(',')
     if sys.platform == 'darwin': 
-        readline.parse_and_bind ("bind ^I rl_complete") 
+        readline.parse_and_bind("bind ^I rl_complete")
     else: 
         readline.parse_and_bind("tab: complete")
     
