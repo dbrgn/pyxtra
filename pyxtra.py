@@ -401,19 +401,19 @@ def main():
 
     # Show welcome message
     nickname, fullname, remaining = get_user_info(browser)
-    print 'Hi, %s. You have %s SMS remaining.' % (fullname, remaining)
+    print 'Hi %s. You have %s SMS remaining.' % (fullname, remaining)
 
     def print_help():
         print 'Available commands:'
-        print '\tn, new -- Compose an SMS'
-        print '\tc, contacts -- Show contacts'
-        print '\ts, search -- Search contacts'
-        print '\ta, add -- Add a new contact'
-        print '\tq, quit -- Quit'
-        print '\th, help -- Show this help'
-
+        print '\tn, new      - Compose an SMS'
+        print '\tc, contacts - Show contacts'
+        print '\ts, search   - Search contacts'
+        print '\ta, add      - Add a new contact'
+        print '\th, help     - Show this help'
+        print '\tq, quit     - Quit'
+        
     # Main menu
-    print "Enter 'h' or 'help' to show available commands."
+    print "Use 'h' or 'help' to show available commands."
     while(1):
         choice = raw_input('> ').strip().lower()
         if choice in ['h', 'help']:
@@ -452,7 +452,7 @@ def main():
             continue
             
         else:
-            print "Unknown command. Use 'help' to show all commands."
+            print "Unknown command. Use 'help' to show available commands."
 
     print 'Goodbye.'
 
