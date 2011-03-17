@@ -34,6 +34,7 @@ from datetime import datetime
 
 try:
     import readline
+    import rlcompleter 
     import json
     import mechanize
     from BeautifulSoup import BeautifulSoup
@@ -304,8 +305,11 @@ def send_sms(browser, contacts=[], logging='n'):
             return None
     readline.set_completer(completer)
     readline.set_completer_delims(',')
-    readline.parse_and_bind('tab: complete')
-
+    if(sys.platform == 'darwin'): 
+            readline.parse_and_bind ("bind ^I rl_complete") 
+    else: 
+            readline.parse_and_bind("tab: complete")
+    
     def replace_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
