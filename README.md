@@ -1,7 +1,7 @@
 pyxtra
 ======
 
-pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS service. It is currently being developed for Linux- and OSX-based operating systems.
+pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS service. It is being developed for Linux- and OS X-based operating systems.
 
 
 Requirements
@@ -10,16 +10,35 @@ Requirements
 - python2
 - python-mechanize
 - python-beautifulsoup
-- python-simplejson (for python < 2.6 only)
 - python-xlrd
 - python-tk
 - python-imaging
+- python-simplejson (for python < 2.6 only)
+
+
+Installation
+------------
+
+1. Prerequisites: You need to install python>=2.5 and tk
+
+2. Install dependencies. If you haven't got pip installed, use `easy_install` instead.
+
+    sudo pip install BeautifulSoup PIL mechanize xlrd
+
+Ubuntu should do it this way instead:
+
+    sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging
+
+3. Install pyxtra
+
+    sudo python setup.py install
 
 
 Changelog
 ---------
 
-Currently work in progress
+v1.0
+- First version released
 
 
 License
