@@ -54,7 +54,7 @@ except ImportError as e:
 
 # Some configuration variables
 __debug = False  # Set to True to show debug output
-__fakesend = True # Set to True to not send sms
+__fakesend = False # Set to True to not send sms
 separator = '--------------------'
 
 
@@ -307,7 +307,7 @@ def send_sms(browser, contacts=[], logging='n'):
     readline.set_completer(completer)
     readline.set_completer_delims(',')
     if sys.platform == 'darwin': 
-        readline.parse_and_bind ("bind ^I rl_complete") 
+        readline.parse_and_bind("bind ^I rl_complete")
     else: 
         readline.parse_and_bind("tab: complete")
     
