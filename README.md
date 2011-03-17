@@ -3,7 +3,7 @@ pyxtra
 
 pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS service. It is being developed for Linux- and OS X-based operating systems.
 
-![Screenshot](https://github.com/gwrtheyrn/pyxtra/raw/master/MANIFEST)
+![Screenshot](https://github.com/gwrtheyrn/pyxtra/raw/master/screenshot.png)
 
 
 Requirements
