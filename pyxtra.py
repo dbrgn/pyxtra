@@ -447,6 +447,10 @@ def main():
             print_contacts(filter(fcontacts, contacts))
         elif choice in ['x', 'q', 'exit', 'quit']:
             break
+        
+        elif not choice:
+            continue
+            
         else:
             print "Unknown command. Use 'help' to show all commands."
 
