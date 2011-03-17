@@ -31,7 +31,7 @@ Installation
 
 3. Install pyxtra
 
-    sudo python setup.py install
+        sudo python setup.py install
 
 
 Changelog
