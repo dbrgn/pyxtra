@@ -412,12 +412,13 @@ def main():
 
     def print_help():
         print 'Available commands:'
-        print '\tn, new      - Compose an SMS'
-        print '\tc, contacts - Show contacts'
-        print '\ts, search   - Search contacts'
-        print '\ta, add      - Add a new contact'
-        print '\th, help     - Show this help'
-        print '\tq, quit     - Quit'
+        print '\tn,  new      - Compose an SMS' 
+        print '\tn!, new!     - SMS mode (Ctrl+c to exit)' 
+        print '\tc,  contacts - Show contacts'
+        print '\ts,  search   - Search contacts'
+        print '\ta,  add      - Add a new contact'
+        print '\th,  help     - Show this help'
+        print '\tq,  quit     - Quit'
         
     # Main menu
     print "Use 'h' or 'help' to show available commands."
@@ -425,10 +426,13 @@ def main():
         choice = raw_input('> ').strip().lower()
         if choice in ['h', 'help']:
             print_help()
-        elif choice in ['n', 'new']:
+        elif choice in ['n!', 'new!', 'n', 'new']:
             try:
-                send_sms(browser, contacts, logging)
-                print "%s SMS remaining." % get_user_info(browser)[2]
+                while(1):
+                    send_sms(browser, contacts, logging)
+                    print "%s SMS remaining." % get_user_info(browser)[2]
+                    if choice in ['n', 'new']:
+                        break
             except KeyboardInterrupt:
                 print '\nCancel...'
                 continue

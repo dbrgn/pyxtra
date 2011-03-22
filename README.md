@@ -45,6 +45,7 @@ v1.0 (2011-03-17)
 
 current dev
 
+- [add] New SMS Mode (compose SMS in looped mode), available through n! / new!
 - [add] Feature to show stack traces (nice to debug)
 - [bug] (outstanding) Fixed problem with expired session (Issue #7)
 
