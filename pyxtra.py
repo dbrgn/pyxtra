@@ -4,7 +4,7 @@
 """A small commandline utility written in Python to access the Swisscom
 Xtrazone SMS service
 
-Version: 1.0
+Version: 1.1
 
 License:
 Copyright (C) 2011 Danilo Bargen, Peter Manser
@@ -55,6 +55,7 @@ except ImportError as e:
 # Some configuration variables
 __debug = False  # Set to True to show debug output
 __fakesend = False # Set to True to not send sms
+__stacktraces = False
 separator = '--------------------'
 
 
@@ -356,11 +357,16 @@ def send_sms(browser, contacts=[], logging='n'):
                 }
         browser.open(url, urllib.urlencode(data))
         resp = json.loads(browser.response().read())
-        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
-            resp['content']['isError'] != False):
+        try:
+            if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+                resp['content']['isError'] != False):
+                raise XtrazoneError('Unknown error sending SMS.')
+        except TypeError:
+            if __stacktraces:
+                print resp
             raise XtrazoneError('Unknown error sending SMS.')
-        # Show success message
-        print 'SMS sent successfully.'
+        else:
+            print 'SMS sent successfully.'
     else:
         print 'SMS won\'t be send, because fakesend is activated.'
     
@@ -469,5 +475,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        print 'Error: ' + str(e)
-        sys.exit(1)
+        if not __stacktraces:
+            print 'Error: ' + str(e)
+            sys.exit(1)
+        else:
+            raise
