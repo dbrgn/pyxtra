@@ -4,7 +4,7 @@
 from distutils.core import setup
 
 setup(name='pyxtra',
-      version='1.0',
+      version='1.1',
       author='Danilo Bargen, Peter Manser',
       author_email='gezuru@gmail.com',
       url='https://github.com/gwrtheyrn/pyxtra/',

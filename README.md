@@ -43,6 +43,11 @@ v1.0 (2011-03-17)
 
 - First version released
 
+current dev
+
+- [add] Feature to show stack traces (nice to debug)
+- [bug] (outstanding) Fixed problem with expired session (Issue #7)
+
 
 License
 -------
