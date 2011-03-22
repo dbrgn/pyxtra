@@ -145,6 +145,7 @@ def login(browser, username, password):
 
     # Get CAPTCHA URL
     browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
+
     browser.addheaders = [
             ('X-Requested-With', 'XMLHttpRequest'),
             ('X-Header-XtraZone', 'XtraZone'),
@@ -478,6 +479,9 @@ if __name__ == '__main__':
         sys.exit(1)
     try:
         main()
+    except mechanize.URLError:
+        raise XtrazoneError('Could not connect to Xtrazone. Are you ' \
+                             'connected to the Internet?')
     except Exception as e:
         if not __stacktraces:
             print 'Error: ' + str(e)
