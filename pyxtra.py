@@ -492,9 +492,12 @@ if __name__ == '__main__':
         sys.exit(1)
     try:
         main()
+    except (EOFError, KeyboardInterrupt):
+        print '\nGoodbye.'
+        sys.exit(0)
     except mechanize.URLError:
-        raise XtrazoneError('Could not connect to Xtrazone. Are you ' \
-                             'connected to the Internet?')
+        msg = 'Could not connect to Xtrazone. Check your internet connection.'
+        raise XtrazoneError(msg)
     except Exception as e:
         if not __stacktraces:
             print 'Error: ' + str(e)
