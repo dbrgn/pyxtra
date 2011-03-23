@@ -141,7 +141,7 @@ def init():
 def login(browser, username, password):
     """Display the CAPTCHA and log in."""
     if password == '':
-        password = raw_input('Xtrazone password: ').strip()
+        password = getpass.getpass('Xtrazone password: ').strip()
 
     # Get CAPTCHA URL
     browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
