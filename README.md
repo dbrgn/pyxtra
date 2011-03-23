@@ -39,15 +39,15 @@ Installation
 Changelog
 ---------
 
+v1.1 (2011-03-23)
+
+- [add] New SMS Mode (compose SMS in looped mode), available through `n!` / `new!`
+- [add] Feature to show stack traces (nice to debug)
+- [bug] Fixed problem with expired sessions (Issue #7)
+
 v1.0 (2011-03-17)
 
 - First version released
-
-current dev
-
-- [add] New SMS Mode (compose SMS in looped mode), available through n! / new!
-- [add] Feature to show stack traces (nice to debug)
-- [bug] (outstanding) Fixed problem with expired session (Issue #7)
 
 
 License
