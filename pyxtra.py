@@ -54,8 +54,8 @@ except ImportError as e:
 
 # Some configuration variables
 __debug = False  # Set to True to show debug output
-__fakesend = False # Set to True to not send sms
-__stacktraces = False
+__fakesend = False  # Set to True to not send sms
+__stacktraces = False  # Set to True to show tracebacks
 separator = '--------------------'
 
 
@@ -347,27 +347,40 @@ def send_sms(browser, contacts=[], logging='n'):
             break
     
     if not __fakesend:
-        # Actually send the SMS
-        url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
-              '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
-        data = {'attachmentId': '',
-                'attachments': '',
-                'messagebody': message,
-                'receiversnames': receiver_clean,
-                'recipients': '[]',
-                }
-        browser.open(url, urllib.urlencode(data))
-        resp = json.loads(browser.response().read())
-        try:
-            if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
-                resp['content']['isError'] != False):
-                raise XtrazoneError('Unknown error sending SMS.')
-        except TypeError:
-            if __stacktraces:
-                print resp
-            raise XtrazoneError('Unknown error sending SMS.')
-        else:
-            print 'SMS sent successfully.'
+        while 1:
+            # Actually send the SMS
+            url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+                  '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+            data = {'attachmentId': '',
+                    'attachments': '',
+                    'messagebody': message,
+                    'receiversnames': receiver_clean,
+                    'recipients': '[]',
+                    }
+            browser.open(url, urllib.urlencode(data))
+            resp = json.loads(browser.response().read())
+            try:
+                if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+                    resp['content']['isError'] != False):
+                    raise XtrazoneError('Unknown error sending SMS.')
+            except TypeError:  # Something went wrong.
+                if __stacktraces:
+                    print resp
+                if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
+                    print 'Session has expired. Reconnecting.'
+                    username, password, logging = parse_config()
+                    while 1:
+                        try:
+                            login(browser, username, password)
+                            break
+                        except CaptchaError as e:
+                            print 'Wrong captcha. Try again.'
+                    continue
+                else:
+                    raise XtrazoneError('Unknown error sending SMS.')
+            else:
+                print 'SMS sent successfully.'
+                break
     else:
         print 'SMS won\'t be send, because fakesend is activated.'
     
@@ -396,7 +409,7 @@ def main():
     browser = init()
 
     # Display CAPTCHA and log in
-    while(1):
+    while 1:
         try:
             login(browser, username, password)
             break
@@ -423,13 +436,13 @@ def main():
         
     # Main menu
     print "Use 'h' or 'help' to show available commands."
-    while(1):
+    while 1:
         choice = raw_input('> ').strip().lower()
         if choice in ['h', 'help']:
             print_help()
         elif choice in ['n!', 'new!', 'n', 'new']:
             try:
-                while(1):
+                while 1:
                     send_sms(browser, contacts, logging)
                     print "%s SMS remaining." % get_user_info(browser)[2]
                     if choice in ['n', 'new']:
