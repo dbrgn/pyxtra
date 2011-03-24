@@ -36,6 +36,13 @@ Installation
         sudo python setup.py install
 
 
+FAQ
+---
+
+#### Q: How can I easily select the receiver from the contacts list when writing a new SMS?
+A: pyxtra supports tab completion. Simply start typing a name and press the `tab` key.
+
+
 Changelog
 ---------
 
