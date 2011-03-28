@@ -55,11 +55,9 @@ except ImportError as e:
 # Some configuration variables
 __debug = False  # Set to True to show debug output
 __fakesend = False  # Set to True to not send sms
-__stacktraces = False  # Set to True to show tracebacks
-separator = '--------------------'
-captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra&token='
-captcha_tries_max = 3 # Set maximum of captcha crack tries
-captcha_cracking_enabled = True
+__tracebacks = False  # Set to True to show tracebacks
+__captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra&token='
+__separator = '--------------------'
 
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
@@ -70,16 +68,31 @@ class CaptchaError(XtrazoneError):
     pass
 
 
+def yn_choice(message, default='y'):
+    choices = 'Y/n' if default.lower() in ('y', 'yes') else 'y/N'
+    choice = raw_input("%s (%s) " % (message, choices))
+    values = ('y', 'yes', '') if default == 'y' else ('y', 'yes')
+    return True if choice.strip().lower() in values else False
+
+
 def remove_accents(ustr):
     """Removes accents from an unicode string.
 
     Strips all accents by removing the precomposed unicode characters. String
-    to convert should be in unicode format."""
+    to convert should be in unicode format.
+    
+    """
     nkfd_form = unicodedata.normalize('NFKD', unicode(ustr))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
 
+
 def parse_config():
-    """Parse the configuration file."""
+    """Parse the configuration file.
+    
+    Parses or creates a configuration file and returns a dictionary with
+    all the configuration variables.
+    
+    """
     # Folder that will contain all configfiles
     config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
     config_file = os.path.join(config_folder, 'config')
@@ -94,27 +107,71 @@ def parse_config():
     # Read config, write default config file if it doesn't exist yet.
     if not len(config.read(config_file)):
         print 'Could not find configuration file. Creating %s.' % config_file
+
+        # Login data
         username = raw_input('\nXtrazone username: ').strip()
         print 'Enter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
         password = getpass.getpass('Xtrazone password (ENTER to skip): ').strip()
-        logging_msg = 'Do you want to log all sent sms to %s? [y/n]: ' % log_file
-        logging = ''
-        while logging not in ['y', 'n']:
-            logging = raw_input(logging_msg).strip().lower()
-        print 'Initial configuration is finished.\n'
+
+        # Logging
+        logging_msg = 'Do you want to log all sent sms to %s?' % log_file
+        logging = 'yes' if yn_choice(logging_msg) else 'no'
+
+        # Anticaptcha
+        anticaptcha_msg = 'Do you want to use the anticaptcha service?'
+        anticaptcha = 'yes' if yn_choice(anticaptcha_msg) else 'no'
+
+        print 'Initial configuration is finished. You may edit your ' + \
+              'configuration file at %s.\n' % config_file
 
         config.add_section('settings')
         config.set('settings', 'username', username)
         config.set('settings', 'password', password)
         config.set('settings', 'logging', logging)
+        config.add_section('captcha')
+        config.set('captcha', 'anticaptcha', anticaptcha)
+        config.set('captcha', 'anticaptcha_max_tries', 3)
         config.write(open(config_file, 'w'))
     else:
+        # Add sections if necessary
+        for s in ['settings', 'captcha']:
+            try:
+                config.add_section(s)
+            except ConfigParser.DuplicateSectionError:
+                pass
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
-        logging = config.get('settings', 'logging')
+        try:
+            logging = config.getboolean('settings', 'logging')
+        except (ValueError, ConfigParser.NoOptionError):
+            logging_msg = 'Do you want to log all sent sms to %s?' % log_file
+            logging = 'yes' if yn_choice(logging_msg) else 'no'
+            config.set('settings', 'logging', logging)
+        try:
+            anticaptcha = config.getboolean('captcha', 'anticaptcha')
+        except (ValueError, ConfigParser.NoOptionError):
+            anticaptcha_msg = 'Do you want to use the anticaptcha service?'
+            anticaptcha = 'yes' if yn_choice(anticaptcha_msg) else 'no'
+            config.set('captcha', 'anticaptcha', anticaptcha)
+        try:
+            anticaptcha_max_tries = config.getint('captcha',
+                                    'anticaptcha_max_tries')
+        except (ValueError, ConfigParser.NoOptionError):
+            config.set('captcha', 'anticaptcha_max_tries', 3)
 
-    return username, password, logging
+        # Write possibly changed configuration file
+        config.write(open(config_file, 'w'))
+
+    if not 'anticaptcha_max_tries' in locals():
+        anticaptcha_max_tries = 3
+    if not anticaptcha in ['yes', True]:
+        anticaptcha = False
+    return {'username': username,
+            'password': password,
+            'logging': logging,
+            'anticaptcha': anticaptcha,
+            'anticaptcha_max_tries': anticaptcha_max_tries}
    
 
 def init():
@@ -140,13 +197,12 @@ def init():
     return b
 
 
-def login(browser, username, password):
+def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=3):
     """Display the CAPTCHA and log in."""
     
     captcha_tries = 1
-    #if captcha cracking is disabled, set tries to max+1
-    if not captcha_cracking_enabled:
-        captcha_tries += captcha_tries_max
+    if not anticaptcha:
+        captcha_tries += anticaptcha_max_tries
         
     while 1:
         try:
@@ -175,21 +231,21 @@ def login(browser, username, password):
             captcha_token = resp['content']['messages']['operation']['token']
             
             # Try to crack it automatically
-            if (captcha_tries <= captcha_tries_max):
-                print 'Trying to crack CAPTCHA... (%s)' % captcha_tries
-                captcha_resp = urllib.urlopen(captcha_service_url + captcha_token).read()
+            if captcha_tries <= anticaptcha_max_tries:
+                print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
+                captcha_resp = urllib.urlopen(__captcha_service_url + captcha_token).read()
                 if captcha_resp.startswith('Captcha: '):
                     captcha = captcha_resp.replace('Captcha: ','')
                 else:
-                    captcha_tries = captcha_tries_max
+                    captcha_tries = anticaptcha_max_tries
                     raise CaptchaError('CAPTCHA cracking service seems to be broken.')
                     
-            # User must enter CAPTCHA manually
+            # User has to enter CAPTCHA manually
             else:
-                if captcha_cracking_enabled:
+                if anticaptcha:
                     print 'Automatically cracking CAPTCHA failed. :('
                 
-                captcha_url = 'http:' + resp['content']['messages']['operation']['imgUrl']
+                captcha_url = 'http:%s' % resp['content']['messages']['operation']['imgUrl']
                 # Display CAPTCHA in a new window
                 tk_root = Tkinter.Tk(className='CAPTCHA')
                 img = ImageTk.PhotoImage(
@@ -239,11 +295,9 @@ def login(browser, username, password):
             break
             
         except CaptchaError as e:
-            if captcha_tries > captcha_tries_max:
+            if captcha_tries > anticaptcha_max_tries:
                 print 'Wrong CAPTCHA. Try again.'
             captcha_tries += 1
-        except XtrazoneError as e:
-            print 'Login failed.'
 
 def get_user_info(browser):
     """Retrieve user info.
@@ -319,13 +373,13 @@ def print_contacts(contacts):
         nr = str(nr)[2:11]
         return '0%s %s %s %s' % (nr[0:2], nr[2:5], nr[5:7], nr[7:9])
 
-    print separator
+    print __separator
     for contact in contacts:
         print '%s: %s' % (contact[2].strip(), natel_nr(contact[1]))
-    print separator
+    print __separator
 
 
-def send_sms(browser, contacts=[], logging='n'):
+def send_sms(browser, contacts=[], logging=False):
     """Send SMS.
     
     Query for cell phone number and message and send SMS.
@@ -398,14 +452,13 @@ def send_sms(browser, contacts=[], logging='n'):
                     resp['content']['isError'] != False):
                     raise XtrazoneError('Unknown error sending SMS.')
             except TypeError:  # Something went wrong.
-                if __stacktraces:
+                if __tracebacks:
                     print resp
                 if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
                     print 'Session has expired. Reconnecting...'
-                    username, password, logging = parse_config()
-                    
-                    login(browser, username, password)
-                    
+                    cfg = parse_config()
+                    login(browser, cfg['username'], cfg['password'],
+                          cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
                 else:
                     raise XtrazoneError('Unknown error sending SMS.')
             else:
@@ -415,7 +468,7 @@ def send_sms(browser, contacts=[], logging='n'):
         print 'SMS won\'t be send, because fakesend is activated.'
     
     # If desired, log SMS
-    if logging == 'y':
+    if logging:
         pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
         log_file = os.path.join(pyxtra_folder, 'sent.log')
         f = open(log_file, 'a')  # Open file for appending
@@ -433,13 +486,14 @@ def main():
     show or add contacts.
     """
     # Parse configuration file
-    username, password, logging = parse_config()
+    cfg = parse_config()
 
     # Initialize mechanize browser session
     browser = init()
 
     # Log in
-    login(browser, username, password)
+    login(browser, cfg['username'], cfg['password'],
+          cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
     # Get contacts
     print 'Retrieving contacts...'
     contacts = pull_contacts(browser)
@@ -467,7 +521,7 @@ def main():
         elif choice in ['n!', 'new!', 'n', 'new']:
             try:
                 while 1:
-                    send_sms(browser, contacts, logging)
+                    send_sms(browser, contacts, cfg['logging'])
                     print "%s SMS remaining." % get_user_info(browser)[2]
                     if choice in ['n', 'new']:
                         break
@@ -521,13 +575,21 @@ if __name__ == '__main__':
         sys.exit(0)
     except mechanize.URLError:
         msg = 'Could not connect to Xtrazone. Check your internet connection.'
-        if not __stacktraces:
+        if not __tracebacks:
+            print 'Error: %s' % msg
+            sys.exit(1)
+        else:
+            raise XtrazoneError(msg)    
+    except ConfigParser.NoOptionError:
+        msg = 'Error in configuration file. Please remove your configfile ' + \
+              '(usually in ~/.pyxtra/) and try again.'
+        if not __tracebacks:
             print 'Error: %s' % msg
             sys.exit(1)
         else:
             raise XtrazoneError(msg)    
     except Exception as e:
-        if not __stacktraces:
+        if not __tracebacks:
             print 'Error: %s' % str(e)
             sys.exit(1)
         else:
