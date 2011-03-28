@@ -57,7 +57,9 @@ __debug = False  # Set to True to show debug output
 __fakesend = False  # Set to True to not send sms
 __stacktraces = False  # Set to True to show tracebacks
 separator = '--------------------'
-
+captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra&token='
+captcha_tries_max = 3 # Set maximum of captcha crack tries
+captcha_cracking_enabled = False
 
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
@@ -140,76 +142,108 @@ def init():
 
 def login(browser, username, password):
     """Display the CAPTCHA and log in."""
-    if password == '':
-        password = getpass.getpass('Xtrazone password: ').strip()
-
-    # Get CAPTCHA URL
-    browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
-
-    browser.addheaders = [
-            ('X-Requested-With', 'XMLHttpRequest'),
-            ('X-Header-XtraZone', 'XtraZone'),
-            ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
-            ]
-    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
-           '?route=%2Flogin%2Fgetcaptcha'
-    data = {'action': 'getCaptcha',
-            'do_sso_login': 0,
-            'passphrase': '',
-            'sso_password': password,
-            'sso_user': username,
-            'token': '',
-            }
-    browser.open(url, urllib.urlencode(data))
-    resp = json.loads(browser.response().read())  # Convert response to dict
-    captcha_url = 'http:' + resp['content']['messages']['operation']['imgUrl']
-    captcha_token = resp['content']['messages']['operation']['token']
     
-    # Display CAPTCHA in a new window
-    tk_root = Tkinter.Tk(className='CAPTCHA')
-    img = ImageTk.PhotoImage(
-            Image.open(
-              StringIO(
-                urllib.urlopen(captcha_url).read()
-              )
-            )
-          )
-    captcha_label = Tkinter.Label(tk_root, image=img)
-    captcha_label.pack()
-
-    # Get CAPTCHA text
-    captcha = ''
-    while captcha == '':
-        captcha = raw_input('Please enter CAPTCHA: ').strip()
-
-    # Destroy CAPTCHA window
-    try:
-        tk_root.destroy()
-    except Tkinter.TclError:
-        pass
-    
-    # Log in
-    browser.addheaders = [
-            ('X-Requested-With', 'XMLHttpRequest'),
-            ('X-Header-XtraZone', 'XtraZone'),
-            ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
-            ]
-    url = 'https://xtrazone.sso.bluewin.ch/index.php/22,39,ajax_json,,,157/'
-    data = {'action': 'ssoLogin',
-            'do_sso_login': 1,
-            'passphrase': captcha,
-            'sso_password': password,
-            'sso_user': username,
-            'token': captcha_token,
-            }
-    browser.open(url, urllib.urlencode(data))
-
-    resp = json.loads(browser.response().read())
-    if resp['status'] == 'captcha_failed':
-        raise CaptchaError('CAPTCHA failed: %s' % resp['message'])
-    if resp['status'] != 'login_ok':
-        raise XtrazoneError('Login failed: %s' % resp['message'])
-
+    captcha_tries = 1
+    #if captcha cracking is disabled, set tries to max+1
+    if not captcha_cracking_enabled:
+        captcha_tries += captcha_tries_max
+        
+    while 1:
+        try:
+            if password == '':
+                password = getpass.getpass('Xtrazone password: ').strip()
+                
+            # Get CAPTCHA URL
+            browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
+            
+            browser.addheaders = [
+                    ('X-Requested-With', 'XMLHttpRequest'),
+                    ('X-Header-XtraZone', 'XtraZone'),
+                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
+                    ]
+            url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+                   '?route=%2Flogin%2Fgetcaptcha'
+            data = {'action': 'getCaptcha',
+                    'do_sso_login': 0,
+                    'passphrase': '',
+                    'sso_password': password,
+                    'sso_user': username,
+                    'token': '',
+                    }
+            browser.open(url, urllib.urlencode(data))
+            resp = json.loads(browser.response().read())  # Convert response to dict
+            captcha_token = resp['content']['messages']['operation']['token']
+            
+            # Try to crack it automatically
+            if (captcha_tries <= captcha_tries_max):
+                print 'Trying to crack CAPTCHA... (%s)' % captcha_tries
+                captcha_resp = urllib.urlopen(captcha_service_url + captcha_token).read()
+                if captcha_resp.startswith('Captcha: '):
+                    captcha = captcha_resp.replace('Captcha: ','')
+                else:
+                    captcha_tries = captcha_tries_max
+                    raise CaptchaError('CAPTCHA cracking service seems to be broken.')
+                    
+            # User must enter CAPTCHA manually
+            else:
+                if captcha_cracking_enabled:
+                    print 'Automatically cracking CAPTCHA failed. :('
+                
+                captcha_url = 'http:' + resp['content']['messages']['operation']['imgUrl']
+                # Display CAPTCHA in a new window
+                tk_root = Tkinter.Tk(className='CAPTCHA')
+                img = ImageTk.PhotoImage(
+                        Image.open(
+                          StringIO(
+                            urllib.urlopen(captcha_url).read()
+                          )
+                        )
+                      )
+                captcha_label = Tkinter.Label(tk_root, image=img)
+                captcha_label.pack()
+                
+                # Get CAPTCHA text
+                captcha = ''
+                while captcha == '':
+                    captcha = raw_input('Please enter CAPTCHA: ').strip()
+                    
+                # Destroy CAPTCHA window
+                try:
+                    tk_root.destroy()
+                except Tkinter.TclError:
+                    pass
+                
+            # Log in
+            browser.addheaders = [
+                    ('X-Requested-With', 'XMLHttpRequest'),
+                    ('X-Header-XtraZone', 'XtraZone'),
+                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
+                    ]
+            url = 'https://xtrazone.sso.bluewin.ch/index.php/22,39,ajax_json,,,157/'
+            data = {'action': 'ssoLogin',
+                    'do_sso_login': 1,
+                    'passphrase': captcha,
+                    'sso_password': password,
+                    'sso_user': username,
+                    'token': captcha_token,
+                    }
+            browser.open(url, urllib.urlencode(data))
+            
+            resp = json.loads(browser.response().read())
+            if resp['status'] == 'captcha_failed':
+                raise CaptchaError('CAPTCHA failed: %s' % resp['message'])
+            if resp['status'] != 'login_ok':
+                raise XtrazoneError('Login failed: %s' % resp['message'])
+            
+            #everything worked fine :)
+            break
+            
+        except CaptchaError as e:
+            if captcha_tries > captcha_tries_max:
+                print 'Wrong CAPTCHA. Try again.'
+            captcha_tries += 1
+        except XtrazoneError as e:
+            print 'Login failed.'
 
 def get_user_info(browser):
     """Retrieve user info.
@@ -367,15 +401,11 @@ def send_sms(browser, contacts=[], logging='n'):
                 if __stacktraces:
                     print resp
                 if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
-                    print 'Session has expired. Reconnecting.'
+                    print 'Session has expired. Reconnecting...'
                     username, password, logging = parse_config()
-                    while 1:
-                        try:
-                            login(browser, username, password)
-                            break
-                        except CaptchaError as e:
-                            print 'Wrong captcha. Try again.'
-                    continue
+                    
+                    login(browser, username, password)
+                    
                 else:
                     raise XtrazoneError('Unknown error sending SMS.')
             else:
@@ -408,22 +438,16 @@ def main():
     # Initialize mechanize browser session
     browser = init()
 
-    # Display CAPTCHA and log in
-    while 1:
-        try:
-            login(browser, username, password)
-            break
-        except CaptchaError as e:
-            print 'Wrong captcha. Try again.'
-
+    # Log in
+    login(browser, username, password)
     # Get contacts
     print 'Retrieving contacts...'
     contacts = pull_contacts(browser)
-
+    
     # Show welcome message
     nickname, fullname, remaining = get_user_info(browser)
     print 'Hi %s. You have %s SMS remaining.' % (fullname, remaining)
-
+    
     def print_help():
         print 'Available commands:'
         print '\tn,  new      - Compose an SMS' 
@@ -433,7 +457,7 @@ def main():
         print '\ta,  add      - Add a new contact'
         print '\th,  help     - Show this help'
         print '\tq,  quit     - Quit'
-        
+    
     # Main menu
     print "Use 'h' or 'help' to show available commands."
     while 1:
@@ -475,10 +499,10 @@ def main():
         
         elif not choice:
             continue
-            
+        
         else:
             print "Unknown command. Use 'help' to show available commands."
-
+    
     print 'Goodbye.'
 
 
@@ -497,10 +521,14 @@ if __name__ == '__main__':
         sys.exit(0)
     except mechanize.URLError:
         msg = 'Could not connect to Xtrazone. Check your internet connection.'
-        raise XtrazoneError(msg)
+        if not __stacktraces:
+            print 'Error: %s' % msg
+            sys.exit(1)
+        else:
+            raise XtrazoneError(msg)    
     except Exception as e:
         if not __stacktraces:
-            print 'Error: ' + str(e)
+            print 'Error: %s' % str(e)
             sys.exit(1)
         else:
             raise
