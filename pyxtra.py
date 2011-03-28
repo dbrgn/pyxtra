@@ -59,7 +59,7 @@ __stacktraces = False  # Set to True to show tracebacks
 separator = '--------------------'
 captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra&token='
 captcha_tries_max = 3 # Set maximum of captcha crack tries
-captcha_cracking_enabled = False
+captcha_cracking_enabled = True
 
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
@@ -451,7 +451,7 @@ def main():
     def print_help():
         print 'Available commands:'
         print '\tn,  new      - Compose an SMS' 
-        print '\tn!, new!     - SMS mode (Ctrl+c to exit)' 
+        print '\tn!, new!     - SMS mode (<Ctrl>+c to exit)' 
         print '\tc,  contacts - Show contacts'
         print '\ts,  search   - Search contacts'
         print '\ta,  add      - Add a new contact'
@@ -484,7 +484,7 @@ def main():
                 print '\nCancel...'
                 continue
             except XtrazoneError as e:
-                print 'Error: ' + str(e)
+                print 'Error: %s' % str(e)
         elif choice in ['s', 'search']:
             try:
                 searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
