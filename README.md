@@ -6,6 +6,14 @@ pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS servic
 ![Screenshot](https://github.com/gwrtheyrn/pyxtra/raw/master/screenshot.png)
 
 
+Features
+--------
+
+- Sending SMS messages from the command line
+- Access and add contacts
+- Contacts tab completion (start typing and press tab to autocomplete)
+
+
 Requirements
 ------------
 
@@ -15,7 +23,8 @@ Requirements
 - python-xlrd
 - python-tk
 - python-imaging
-- python-simplejson (for python < 2.6 only)
+- python-imaging-tk (Ubuntu/Debian users only)
+- python-simplejson (for Python < 2.6 only)
 
 
 Installation
@@ -29,7 +38,7 @@ Installation
 
     Ubuntu users should use apt instead of pip:
 
-        sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging
+        sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging python-imaging-tk
 
 3. Install pyxtra
 
@@ -55,6 +64,13 @@ v1.1 (2011-03-23)
 v1.0 (2011-03-17)
 
 - First version released
+
+
+Authors
+-------
+
+- Danilo Bargen (http://ich-wars-nicht.ch/)
+- Peter Manser (http://petermanser.ch/)
 
 
 License
