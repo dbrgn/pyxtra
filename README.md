@@ -12,6 +12,7 @@ Features
 - Sending SMS messages from the command line
 - Access and add contacts
 - Contacts tab completion (start typing and press tab to autocomplete)
+- CAPTCHA-Recognition (Service by http://gorrion.ch/, thanks!)
 
 
 Requirements
@@ -55,6 +56,12 @@ A: pyxtra supports tab completion. Simply start typing a name and press the `tab
 Changelog
 ---------
 
+v1.2 (2011-03-28)
+
+- [add] Circumvent CAPTCHA, service provided by gorrion.ch (Issue #1)
+- [bug] Don't show user password when logging in
+- [bug] Graceful exit on KeyboardInterrupt (ctrl+c) and EOF (ctrl+d)
+
 v1.1 (2011-03-23)
 
 - [add] New SMS Mode (compose SMS in looped mode), available through `n!` / `new!`
@@ -71,6 +78,12 @@ Authors
 
 - Danilo Bargen (http://ich-wars-nicht.ch/)
 - Peter Manser (http://petermanser.ch/)
+
+
+Contributors
+------------
+
+- Sämy Zehnder (Anticaptcha Service, http://gorrion.ch/)
 
 
 License

@@ -56,7 +56,7 @@ except ImportError as e:
 __debug = False  # Set to True to show debug output
 __fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
-__captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra&token='
+__captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra'
 __separator = '--------------------'
 
 class XtrazoneError(Exception):
@@ -200,9 +200,7 @@ def init():
 def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=3):
     """Display the CAPTCHA and log in."""
     
-    captcha_tries = 1
-    if not anticaptcha:
-        captcha_tries += anticaptcha_max_tries
+    captcha_tries = 0
         
     while 1:
         try:
@@ -229,20 +227,34 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             browser.open(url, urllib.urlencode(data))
             resp = json.loads(browser.response().read())  # Convert response to dict
             captcha_token = resp['content']['messages']['operation']['token']
+
+            captcha = ''
+            captcha_tries += 1
             
-            # Try to crack it automatically
-            if captcha_tries <= anticaptcha_max_tries:
+            # Try to crack CAPTCHA automatically (Service by gorrion.ch)
+            if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
-                captcha_resp = urllib.urlopen(__captcha_service_url + captcha_token).read()
+                ac_browser = init()  # New mechanize session
+                try:
+                    ac_browser.open('%s&token=%s' % (__captcha_service_url, captcha_token))
+                except mechanize.URLError:
+                    msg = 'CAPTCHA cracking service not available.'
+                    print msg
+                    anticaptcha = False
+                    raise CaptchaError(msg)
+
+                captcha_resp = ac_browser.response().read()
                 if captcha_resp.startswith('Captcha: '):
                     captcha = captcha_resp.replace('Captcha: ','')
                 else:
-                    captcha_tries = anticaptcha_max_tries
-                    raise CaptchaError('CAPTCHA cracking service seems to be broken.')
+                    msg = 'CAPTCHA cracking service returns invalid reply.'
+                    print msg
+                    anticaptcha = False
+                    raise CaptchaError(msg)
                     
             # User has to enter CAPTCHA manually
             else:
-                if anticaptcha:
+                if anticaptcha and captcha_tries == anticaptcha_max_tries + 1:
                     print 'Automatically cracking CAPTCHA failed. :('
                 
                 captcha_url = 'http:%s' % resp['content']['messages']['operation']['imgUrl']
@@ -259,7 +271,6 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 captcha_label.pack()
                 
                 # Get CAPTCHA text
-                captcha = ''
                 while captcha == '':
                     captcha = raw_input('Please enter CAPTCHA: ').strip()
                     
@@ -291,13 +302,18 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             if resp['status'] != 'login_ok':
                 raise XtrazoneError('Login failed: %s' % resp['message'])
             
-            #everything worked fine :)
+            # Everything worked fine :)
+            if anticaptcha and captcha_tries <= anticaptcha_max_tries:
+                if captcha:  # Report successful CAPTCHAs to the anticaptcha service
+                    ac_browser.open('%s&captcha=%s&success=1' % (__captcha_service_url, captcha))
             break
             
         except CaptchaError as e:
+            if anticaptcha and captcha_tries <= anticaptcha_max_tries:
+                if captcha:  # Report unsuccessful CAPTCHAs to the anticaptcha service
+                    ac_browser.open('%s&captcha=%s&success=0' % (__captcha_service_url, captcha))
             if captcha_tries > anticaptcha_max_tries:
                 print 'Wrong CAPTCHA. Try again.'
-            captcha_tries += 1
 
 def get_user_info(browser):
     """Retrieve user info.
