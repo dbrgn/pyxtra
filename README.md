@@ -54,7 +54,7 @@ FAQ
 A: pyxtra supports tab completion. Simply start typing a name and press the `tab` key.
 
 #### Q: How can I run pyxtra in a headless setup (e.g. on my server)?
-A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.pyxtra/config` to 8.
+A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.pyxtra/config` to a higher number.
 
 
 Changelog
