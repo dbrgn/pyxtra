@@ -1,4 +1,5 @@
-pyxtra.pyc
-gorrion.py
+*.pyc
+*fuscate.*
+*_unobfusc.py
 MANIFEST
 ssl/*
