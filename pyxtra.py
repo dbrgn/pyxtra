@@ -31,6 +31,7 @@ import ConfigParser
 import unicodedata
 from StringIO import StringIO
 from datetime import datetime
+import gorrion
 
 try:
     import readline
@@ -56,7 +57,6 @@ except ImportError as e:
 __debug = False  # Set to True to show debug output
 __fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
-__captcha_service_url = 'http://captcha.smssender.gorrion.ch/?mode=xtra'
 __separator = '--------------------'
 
 class XtrazoneError(Exception):
@@ -234,23 +234,12 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             # Try to crack CAPTCHA automatically (Service by gorrion.ch)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
-                ac_browser = init()  # New mechanize session
                 try:
-                    ac_browser.open('%s&token=%s' % (__captcha_service_url, captcha_token))
-                except mechanize.URLError:
-                    msg = 'CAPTCHA cracking service not available.'
-                    print msg
+                    captcha = gorrion.get_captcha(captcha_token)
+                except gorrion.GorrionError as e:
+                    print e.message
                     anticaptcha = False
-                    raise CaptchaError(msg)
-
-                captcha_resp = ac_browser.response().read()
-                if captcha_resp.startswith('Captcha: '):
-                    captcha = captcha_resp.replace('Captcha: ','')
-                else:
-                    msg = 'CAPTCHA cracking service returns invalid reply.'
-                    print msg
-                    anticaptcha = False
-                    raise CaptchaError(msg)
+                    raise CaptchaError(e.message)
                     
             # User has to enter CAPTCHA manually
             else:
@@ -305,13 +294,16 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             # Everything worked fine :)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 if captcha:  # Report successful CAPTCHAs to the anticaptcha service
-                    ac_browser.open('%s&captcha=%s&success=1' % (__captcha_service_url, captcha))
+                    try:
+                        gorrion.report(captcha, 1)
+                    except gorrion.GorrionError as e:
+                        print 'Anticaptcha reporting: %s' % e.message
             break
             
         except CaptchaError as e:
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
-                if captcha:  # Report unsuccessful CAPTCHAs to the anticaptcha service
-                    ac_browser.open('%s&captcha=%s&success=0' % (__captcha_service_url, captcha))
+                if captcha:  
+                    pass  # Possibly report to gorrion
             if captcha_tries > anticaptcha_max_tries:
                 print 'Wrong CAPTCHA. Try again.'
 

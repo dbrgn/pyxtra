@@ -1,2 +1,4 @@
-*.pyc
+pyxtra.pyc
+gorrion.py
 MANIFEST
+ssl/*
