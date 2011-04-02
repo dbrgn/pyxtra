@@ -12,7 +12,7 @@ setup(name='pyxtra',
       platforms=['Unix', 'Mac'],
       license='GPLv3',
       requires=['BeautifulSoup', 'PIL', 'mechanize', 'xlrd', 'readline', 'Tkinter'], 
-      py_modules=['pyxtra'],
+      py_modules=['pyxtra', 'gorrion'],
       scripts=['pyxtra.py'],
       classifiers=[
           'Development Status :: Production/Stable',

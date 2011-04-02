@@ -12,7 +12,8 @@ Features
 - Sending SMS messages from the command line
 - Access and add contacts
 - Contacts tab completion (start typing and press tab to autocomplete)
-- CAPTCHA-Recognition (Service by http://gorrion.ch/, thanks!)
+- CAPTCHA-Recognition (service by http://gorrion.ch/, thanks!)
+- Headless setup possible (if CAPTCHA-Recognition is enabled)
 
 
 Requirements
@@ -37,7 +38,7 @@ Installation
 
         sudo pip install BeautifulSoup PIL mechanize xlrd
 
-    Ubuntu users should use apt instead of pip:
+    Ubuntu/Debian users should use apt instead of pip:
 
         sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging python-imaging-tk
 
@@ -52,11 +53,14 @@ FAQ
 #### Q: How can I easily select the receiver from the contacts list when writing a new SMS?
 A: pyxtra supports tab completion. Simply start typing a name and press the `tab` key.
 
+#### Q: How can I run pyxtra in a headless setup (e.g. on my server)?
+A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.pyxtra/config` to 8.
+
 
 Changelog
 ---------
 
-v1.2 (2011-03-28)
+v1.2 (2011-04-03)
 
 - [add] Circumvent CAPTCHA, service provided by gorrion.ch (Issue #1)
 - [bug] Don't show user password when logging in
