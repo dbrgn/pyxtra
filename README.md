@@ -32,6 +32,8 @@ Requirements
 Installation
 ------------
 
+If you want to get the latest stable version, visit the [download page](https://github.com/gwrtheyrn/pyxtra/downloads) instead of downloading the current source.
+
 1. Prerequisites: You need to install python>=2.5 and tk
 
 2. Install dependencies. If you haven't got pip installed, use `easy_install` instead.
