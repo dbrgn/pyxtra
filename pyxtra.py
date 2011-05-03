@@ -54,10 +54,10 @@ except ImportError as e:
 
 
 # Some configuration variables
-__debug = False  # Set to True to show debug output
-__fakesend = False  # Set to True to not send sms
+__debug      = False  # Set to True to show debug output
+__fakesend   = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
-__separator = '--------------------'
+__separator  = '--------------------'
 
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
@@ -240,6 +240,9 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                     print e.message
                     anticaptcha = False
                     raise CaptchaError(e.message)
+                except:
+                    anticaptcha = False
+                    raise CaptchaError('Unknown error occured.')
                     
             # User has to enter CAPTCHA manually
             else:
