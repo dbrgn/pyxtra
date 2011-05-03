@@ -54,10 +54,10 @@ except ImportError as e:
 
 
 # Some configuration variables
-__debug      = False  # Set to True to show debug output
-__fakesend   = False  # Set to True to not send sms
+__debug = False  # Set to True to show debug output
+__fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
-__separator  = '--------------------'
+__separator = '--------------------'
 
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
