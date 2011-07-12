@@ -390,11 +390,8 @@ def print_contacts(contacts):
     print __separator
 
 
-def send_sms(browser, contacts=[], logging=False):
-    """Send SMS.
-    
-    Query for cell phone number and message and send SMS.
-    """
+def query_receiver(contacts=[]):
+    """Query for receiver number and return it."""
 
     # Configure and enable tab completion
     def completer(text, state):
@@ -434,7 +431,15 @@ def send_sms(browser, contacts=[], logging=False):
                    'Only comma separated contact names or numbers are allowed.'
         else:
             readline.set_completer()  # Disable tab completion
-            break
+            return receiver_clean
+
+
+def send_sms(browser, receiver, logging=False):
+    """Send SMS.
+    
+    Query for message and send SMS.
+    """
+
     # Get message text
     while 1:
         message = raw_input('Message: ').strip()
@@ -453,7 +458,7 @@ def send_sms(browser, contacts=[], logging=False):
             data = {'attachmentId': '',
                     'attachments': '',
                     'messagebody': message,
-                    'receiversnames': receiver_clean,
+                    'receiversnames': receiver,
                     'recipients': '[]',
                     }
             browser.open(url, urllib.urlencode(data))
@@ -484,8 +489,7 @@ def send_sms(browser, contacts=[], logging=False):
         log_file = os.path.join(pyxtra_folder, 'sent.log')
         f = open(log_file, 'a')  # Open file for appending
         print >> f, 'Date: %s' % datetime.now().strftime('%d.%m.%Y %H:%M:%S')
-        print >> f, 'Receivers (original): %s' % receiver
-        print >> f, 'Receivers (cleaned): %s' % receiver_clean
+        print >> f, 'Receivers: %s' % receiver
         print >> f, 'Message: %s\n' % message
         f.close()
     
@@ -515,13 +519,14 @@ def main():
     
     def print_help():
         print 'Available commands:'
-        print '\tn,  new      - Compose an SMS' 
-        print '\tn!, new!     - SMS mode (<Ctrl>+c to exit)' 
-        print '\tc,  contacts - Show contacts'
-        print '\ts,  search   - Search contacts'
-        print '\ta,  add      - Add a new contact'
-        print '\th,  help     - Show this help'
-        print '\tq,  quit     - Quit'
+        print '\tn,   new      - Compose an SMS' 
+        print '\tn!,  new!     - SMS mode (<Ctrl>+c to exit)' 
+        print '\tn!!, new!!    - Conversation mode (<Ctrl>+c to exit)' 
+        print '\tc,   contacts - Show contacts'
+        print '\ts,   search   - Search contacts'
+        print '\ta,   add      - Add a new contact'
+        print '\th,   help     - Show this help'
+        print '\tq,   quit     - Quit'
     
     # Main menu
     print "Use 'h' or 'help' to show available commands."
@@ -529,10 +534,15 @@ def main():
         choice = raw_input('> ').strip().lower()
         if choice in ['h', 'help']:
             print_help()
-        elif choice in ['n!', 'new!', 'n', 'new']:
+        elif choice in ['n', 'new', 'n!', 'new!', 'n!!', 'new!!']:
             try:
+                receiver_lock = choice in ['n!!', 'new!!']
+                if receiver_lock:
+                    receiver = query_receiver(contacts)
                 while 1:
-                    send_sms(browser, contacts, cfg['logging'])
+                    if not receiver_lock:
+                        receiver = query_receiver(contacts)
+                    send_sms(browser, receiver, cfg['logging'])
                     print "%s SMS remaining." % get_user_info(browser)[2]
                     if choice in ['n', 'new']:
                         break
