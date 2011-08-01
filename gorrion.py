@@ -20,6 +20,7 @@ class _name0x5 (  urllib2.HTTPSHandler )  :
     def name0xa (  name0x6 , name0xb , timeout = 300 )  : 
         return httplib.HTTPSConnection (  name0xb , key_file = name0x6.name0x7 , cert_file = name0x6.name0x8 )  
 class GorrionError (  Exception )  : 
+    '''Thrown upon errors with the CAPTCHA cracking.''' 
     pass 
 def _name0xc (  )  : 
     name0xd = open (  _name0x3 , 'w' )  
@@ -42,7 +43,10 @@ def _name0x10 (  )  :
         pass 
 def _name0x11 (  name0x12 )  : 
     name0xf = _name0xc (  )  
-    name0x13 = name0xf.open (  '%s&token=%s' % (  _name0x0 , name0x12 )  )  . read (  )  
+    try : 
+        name0x13 = name0xf.open (  '%s&token=%s' % (  _name0x0 , name0x12 )  )  . read (  )  
+    except urllib2.HTTPError : 
+        raise GorrionError (  'Could not connect to anticaptcha service.' )  
     if name0x13.startswith (  'Captcha: ' )  : 
         name0x14 = name0x13.replace (  'Captcha: ' , '' )  
     else : 
@@ -51,6 +55,7 @@ def _name0x11 (  name0x12 )  :
         raise GorrionError (  'Anticaptcha service returned an exception. ' + 'Invalid or expired token?' )  
     return name0x14 
 def get_captcha (  name0x12 )  : 
+    '''Try to crack CAPTCHA and return possible answer.''' 
     try : 
         name0x14 = _name0x11 (  name0x12 )  
     except GorrionError : 
@@ -71,6 +76,7 @@ def _name0x15 (  name0x14 , name0x16 )  :
     else : 
         raise GorrionError (  'Captcha must be a string' )  
 def report (  name0x14 , name0x16 )  : 
+    '''Report success to anticaptcha service.''' 
     try : 
         _name0x15 (  name0x14 , name0x16 )  
     except GorrionError : 
