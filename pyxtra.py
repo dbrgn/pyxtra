@@ -24,6 +24,7 @@ pyxtra. If not, see http://www.gnu.org/licenses/.
 
 import os
 import sys
+import stat
 import urllib
 import re
 import getpass
@@ -133,6 +134,7 @@ def parse_config():
         config.set('captcha', 'anticaptcha', anticaptcha)
         config.set('captcha', 'anticaptcha_max_tries', 3)
         config.write(open(config_file, 'w'))
+        os.chmod(config_file, stat.S_IREAD | stat.S_IWRITE)
     else:
         # Add sections if necessary
         for s in ['settings', 'captcha']:
@@ -487,11 +489,14 @@ def send_sms(browser, receiver, logging=False):
     if logging:
         pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
         log_file = os.path.join(pyxtra_folder, 'sent.log')
+        log_file_created = not os.path.exists(log_file)
         f = open(log_file, 'a')  # Open file for appending
         print >> f, 'Date: %s' % datetime.now().strftime('%d.%m.%Y %H:%M:%S')
         print >> f, 'Receivers: %s' % receiver
         print >> f, 'Message: %s\n' % message
         f.close()
+        if log_file_created:
+            os.chmod(log_file, stat.S_IREAD | stat.S_IWRITE)
     
 def main():
     """Main program loop.
