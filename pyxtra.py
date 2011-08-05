@@ -239,9 +239,9 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 try:
                     captcha = gorrion.get_captcha(captcha_token)
                 except gorrion.GorrionError as e:
-                    print e.message
+                    print str(e)
                     anticaptcha = False
-                    raise CaptchaError(e.message)
+                    raise CaptchaError(str(e))
                 except:
                     anticaptcha = False
                     raise CaptchaError('Unknown error occured.')
@@ -302,7 +302,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                     try:
                         gorrion.report(captcha, 1)
                     except gorrion.GorrionError as e:
-                        print 'Anticaptcha reporting: %s' % e.message
+                        print 'Anticaptcha reporting: %s' % str(e)
             break
             
         except CaptchaError as e:
