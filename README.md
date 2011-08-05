@@ -62,6 +62,13 @@ A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.py
 Changelog
 ---------
 
+v1.3 (2011-08-05)
+
+- [add] Conversation mode (Issue #11)
+- [bug] Config file permissions fixed (Issue #9)
+- [bug] Better anticaptcha errorhandling
+- [bug] Refactoring of deprecated code
+
 v1.2 (2011-04-03)
 
 - [add] Circumvent CAPTCHA, service provided by gorrion.ch (Issue #1)
