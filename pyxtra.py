@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""A small commandline utility written in Python to access the Swisscom
+"""A small command-line utility written in Python to access the Swisscom
 Xtrazone SMS service
 
 Version: 1.3
