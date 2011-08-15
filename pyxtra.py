@@ -387,8 +387,11 @@ def print_contacts(contacts):
         return '0%s %s %s %s' % (nr[0:2], nr[2:5], nr[5:7], nr[7:9])
 
     print __separator
-    for contact in contacts:
-        print '%s: %s' % (contact[2].strip(), natel_nr(contact[1]))
+    if contacts:
+        for contact in contacts:
+            print '%s: %s' % (contact[2].strip(), natel_nr(contact[1]))
+    else:
+        print "(no matches)"
     print __separator
 
 
@@ -536,7 +539,10 @@ def main():
     # Main menu
     print "Use 'h' or 'help' to show available commands."
     while 1:
-        choice = raw_input('> ').strip().lower()
+        input = raw_input('> ').strip().lower().partition(' ')
+        choice = input[0]
+        params = input[2]
+
         if choice in ['h', 'help']:
             print_help()
         elif choice in ['n', 'new', 'n!', 'new!', 'n!!', 'new!!']:
@@ -566,11 +572,14 @@ def main():
             except XtrazoneError as e:
                 print 'Error: %s' % str(e)
         elif choice in ['s', 'search']:
-            try:
-                searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
-            except KeyboardInterrupt:
-                print '\nCancel...'
-                continue
+            searchstr = params
+
+            if (not searchstr):
+                try:
+                    searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
+                except KeyboardInterrupt:
+                    print '\nCancel...'
+                    continue
             searchstr = remove_accents(searchstr)
             fcontacts = lambda x: x[2].lower().find(searchstr.lower()) != -1
             print_contacts(filter(fcontacts, contacts))
