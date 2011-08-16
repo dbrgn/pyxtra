@@ -347,6 +347,8 @@ def pull_contacts(browser):
           '%2Fprofile%2Fcontact%2Fexcelexport&suspAjax=1'
     browser.open(url)
     resp = browser.response().read()
+    if not resp:
+        return []
     book = xlrd.open_workbook(file_contents=resp)
     sheet = book.sheet_by_index(0)
     contacts = [sheet.row_values(row) for row in range(1, sheet.nrows)]
