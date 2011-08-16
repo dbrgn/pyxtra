@@ -36,7 +36,6 @@ import gorrion
 
 try:
     import readline
-    import rlcompleter 
     import json
     import mechanize
     from BeautifulSoup import BeautifulSoup
@@ -60,9 +59,11 @@ __fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
 __separator = '--------------------'
 
+
 class XtrazoneError(Exception):
     """Errors related with the Xtrazone page."""
     pass
+
 
 class CaptchaError(XtrazoneError):
     """Errors related with the CAPTCHA."""
@@ -81,7 +82,7 @@ def remove_accents(ustr):
 
     Strips all accents by removing the precomposed unicode characters. String
     to convert should be in unicode format.
-    
+
     """
     nkfd_form = unicodedata.normalize('NFKD', unicode(ustr))
     return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
@@ -89,10 +90,10 @@ def remove_accents(ustr):
 
 def parse_config():
     """Parse the configuration file.
-    
+
     Parses or creates a configuration file and returns a dictionary with
     all the configuration variables.
-    
+
     """
     # Folder that will contain all configfiles
     config_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
@@ -110,10 +111,10 @@ def parse_config():
         print 'Could not find configuration file. Creating %s.' % config_file
 
         # Login data
-        username = raw_input('\nXtrazone username: ').strip()
+        username = raw_input('\nUsername: ').strip()
         print 'Enter your password, in case you want to store it in the ' \
               'config file. Warning: Password will be saved in plaintext.'
-        password = getpass.getpass('Xtrazone password (ENTER to skip): ').strip()
+        password = getpass.getpass('Password (ENTER to skip): ').strip()
 
         # Logging
         logging_msg = 'Do you want to log all sent sms to %s?' % log_file
@@ -174,7 +175,7 @@ def parse_config():
             'logging': logging,
             'anticaptcha': anticaptcha,
             'anticaptcha_max_tries': anticaptcha_max_tries}
-   
+
 
 def init():
     """Initialize and return mechanize instance."""
@@ -201,17 +202,17 @@ def init():
 
 def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=3):
     """Display the CAPTCHA and log in."""
-    
+
     captcha_tries = 0
-        
+
     while 1:
         try:
             if password == '':
                 password = getpass.getpass('Xtrazone password: ').strip()
-                
+
             # Get CAPTCHA URL
             browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
-            
+
             browser.addheaders = [
                     ('X-Requested-With', 'XMLHttpRequest'),
                     ('X-Header-XtraZone', 'XtraZone'),
@@ -232,7 +233,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 
             captcha = ''
             captcha_tries += 1
-            
+
             # Try to crack CAPTCHA automatically (Service by gorrion.ch)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
@@ -245,12 +246,12 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 except:
                     anticaptcha = False
                     raise CaptchaError('Unknown error occured.')
-                    
+
             # User has to enter CAPTCHA manually
             else:
                 if anticaptcha and captcha_tries == anticaptcha_max_tries + 1:
                     print 'Automatically cracking CAPTCHA failed. :('
-                
+
                 captcha_url = 'http:%s' % resp['content']['messages']['operation']['imgUrl']
                 # Display CAPTCHA in a new window
                 tk_root = Tkinter.Tk(className='CAPTCHA')
@@ -263,17 +264,17 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                       )
                 captcha_label = Tkinter.Label(tk_root, image=img)
                 captcha_label.pack()
-                
+
                 # Get CAPTCHA text
                 while captcha == '':
                     captcha = raw_input('Please enter CAPTCHA: ').strip()
-                    
+
                 # Destroy CAPTCHA window
                 try:
                     tk_root.destroy()
                 except Tkinter.TclError:
                     pass
-                
+
             # Log in
             browser.addheaders = [
                     ('X-Requested-With', 'XMLHttpRequest'),
@@ -289,32 +290,33 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                     'token': captcha_token,
                     }
             browser.open(url, urllib.urlencode(data))
-            
+
             resp = json.loads(browser.response().read())
             if resp['status'] == 'captcha_failed':
                 raise CaptchaError('CAPTCHA failed: %s' % resp['message'])
             if resp['status'] != 'login_ok':
                 raise XtrazoneError('Login failed: %s' % resp['message'])
-            
+
             # Everything worked fine :)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
-                if captcha:  # Report successful CAPTCHAs to the anticaptcha service
+                if captcha:  # Report successful CAPTCHAs to gorrion
                     try:
                         gorrion.report(captcha, 1)
                     except gorrion.GorrionError as e:
                         print 'Anticaptcha reporting: %s' % str(e)
             break
-            
+
         except CaptchaError as e:
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
-                if captcha:  
+                if captcha:
                     pass  # Possibly report to gorrion
             if captcha_tries > anticaptcha_max_tries:
                 print 'Wrong CAPTCHA. Try again.'
 
+
 def get_user_info(browser):
     """Retrieve user info.
-    
+
     Return nickname, full name and remaining SMS.
     """
     browser.open('https://xtrazone.sso.bluewin.ch/index.php/' \
@@ -359,7 +361,7 @@ def add_contact(browser, prename='', name='', nr=''):
         name = raw_input('Name: ').strip()
     while nr == '':
         nr = raw_input('Nr: ').strip()
-    
+
     url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=' \
           '%2Fprofile%2Fcontact%2Faddcontact&refresh=/profile/contact/list'
     data = {'contactId': '',
@@ -377,7 +379,7 @@ def add_contact(browser, prename='', name='', nr=''):
         raise XtrazoneError(
                 'Adding contact failed: %s' % resp['content']['headline'])
     print 'Successfully saved contact %s %s.' % (prename, name)
-    
+
 
 def print_contacts(contacts):
     """Print nicely formatted contact list."""
@@ -409,11 +411,11 @@ def query_receiver(contacts=[]):
             return None
     readline.set_completer(completer)
     readline.set_completer_delims(',')
-    if sys.platform == 'darwin': 
+    if sys.platform == 'darwin':
         readline.parse_and_bind("bind ^I rl_complete")
-    else: 
+    else:
         readline.parse_and_bind("tab: complete")
-    
+
     def replace_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
@@ -441,7 +443,7 @@ def query_receiver(contacts=[]):
 
 def send_sms(browser, receiver, logging=False):
     """Send SMS.
-    
+
     Query for message and send SMS.
     """
 
@@ -454,7 +456,7 @@ def send_sms(browser, receiver, logging=False):
             print 'Message too long (max 440 characters)'
         else:
             break
-    
+
     if not __fakesend:
         while 1:
             # Actually send the SMS
@@ -487,7 +489,7 @@ def send_sms(browser, receiver, logging=False):
                 break
     else:
         print 'SMS won\'t be send, because fakesend is activated.'
-    
+
     # If desired, log SMS
     if logging:
         pyxtra_folder = os.path.expanduser(os.path.join('~', '.pyxtra'))
@@ -500,7 +502,8 @@ def send_sms(browser, receiver, logging=False):
         f.close()
         if log_file_created:
             os.chmod(log_file, stat.S_IREAD | stat.S_IWRITE)
-    
+
+
 def main():
     """Main program loop.
 
@@ -520,22 +523,22 @@ def main():
     # Get contacts
     print 'Retrieving contacts...'
     contacts = pull_contacts(browser)
-    
+
     # Show welcome message
     nickname, fullname, remaining = get_user_info(browser)
     print 'Hi %s. You have %s SMS remaining.' % (fullname, remaining)
-    
+
     def print_help():
         print 'Available commands:'
-        print '\tn,   new      - Compose an SMS' 
-        print '\tn!,  new!     - SMS mode (<Ctrl>+c to exit)' 
-        print '\tn!!, new!!    - Conversation mode (<Ctrl>+c to exit)' 
+        print '\tn,   new      - Compose an SMS'
+        print '\tn!,  new!     - SMS mode (<Ctrl>+c to exit)'
+        print '\tn!!, new!!    - Conversation mode (<Ctrl>+c to exit)'
         print '\tc,   contacts - Show contacts'
         print '\ts,   search   - Search contacts'
         print '\ta,   add      - Add a new contact'
         print '\th,   help     - Show this help'
         print '\tq,   quit     - Quit'
-    
+
     # Main menu
     print "Use 'h' or 'help' to show available commands."
     while 1:
@@ -563,7 +566,7 @@ def main():
         elif choice in ['c', 'contacts']:
             print_contacts(contacts)
         elif choice in ['a', 'add']:
-            try:            
+            try:
                 add_contact(browser)
                 contacts = pull_contacts(browser)
             except KeyboardInterrupt:
@@ -585,13 +588,13 @@ def main():
             print_contacts(filter(fcontacts, contacts))
         elif choice in ['x', 'q', 'exit', 'quit']:
             break
-        
+
         elif not choice:
             continue
-        
+
         else:
             print "Unknown command. Use 'help' to show available commands."
-    
+
     print 'Goodbye.'
 
 
@@ -614,7 +617,7 @@ if __name__ == '__main__':
             print 'Error: %s' % msg
             sys.exit(1)
         else:
-            raise XtrazoneError(msg)    
+            raise XtrazoneError(msg)
     except ConfigParser.NoOptionError:
         msg = 'Error in configuration file. Please remove your configfile ' + \
               '(usually in ~/.pyxtra/) and try again.'
@@ -622,7 +625,7 @@ if __name__ == '__main__':
             print 'Error: %s' % msg
             sys.exit(1)
         else:
-            raise XtrazoneError(msg)    
+            raise XtrazoneError(msg)
     except Exception as e:
         if not __tracebacks:
             print 'Error: %s' % str(e)
