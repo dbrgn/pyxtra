@@ -427,7 +427,7 @@ def query_receiver(contacts=[]):
         options = [x[2].strip() for x in contacts
                    if x[2].lower().startswith(text.strip().lower())]
         try:
-            return options[state]
+            return options[state] + ', '
         except IndexError:
             return None
     readline.set_completer(completer)
@@ -451,7 +451,7 @@ def query_receiver(contacts=[]):
 
     # Get receiver number(s)
     while 1:
-        receiver = raw_input('Receiver(s): ')
+        receiver = raw_input('Receiver(s): ').strip(',')
         receiver_clean = replace_contacts(receiver)
         # Test whether all contacts have been matched
         if not re.sub('[ +,]', '', receiver_clean).isdigit():
