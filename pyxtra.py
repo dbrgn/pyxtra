@@ -4,7 +4,7 @@
 """A small command-line utility written in Python to access the Swisscom
 Xtrazone SMS service
 
-Version: 1.3
+Version: 1.4
 
 License:
 Copyright (C) 2011 Danilo Bargen, Peter Manser
@@ -226,7 +226,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 
     while 1:
         try:
-            if password == '':
+            if not password:
                 password = getpass.getpass('Xtrazone password: ').strip()
 
             # Get CAPTCHA URL
@@ -285,7 +285,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 captcha_label.pack()
 
                 # Get CAPTCHA text
-                while captcha == '':
+                while not captcha:
                     captcha = raw_input('Please enter CAPTCHA: ').strip()
 
                 # Destroy CAPTCHA window
@@ -376,11 +376,11 @@ def pull_contacts(browser):
 
 def add_contact(browser, prename='', name='', nr=''):
     """Add a new contact to the XtraZone address book"""
-    while prename == '':
+    while not prename:
         prename = raw_input('First name: ').strip()
-    if name == '':
+    if not name:
         name = raw_input('Name: ').strip()
-    while nr == '':
+    while not nr:
         nr = raw_input('Nr: ').strip()
 
     url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=' \
