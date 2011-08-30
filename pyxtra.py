@@ -58,6 +58,7 @@ __debug = False  # Set to True to show debug output
 __fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
 __separator = '--------------------'
+__xtra_sms_max_length = 440  # Max length of xtrazone sms is 440
 
 
 class XtrazoneError(Exception):
@@ -120,6 +121,10 @@ def parse_config():
         logging_msg = 'Do you want to log all sent sms to %s?' % log_file
         logging = 'yes' if yn_choice(logging_msg) else 'no'
 
+        # Auto send long sms
+        auto_send_long_sms_msg = 'Do you want to send sms automatically, even if they are longer than 440 chars?'
+        auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg) else 'no'
+
         # Anticaptcha
         anticaptcha_msg = 'Do you want to use the anticaptcha service?'
         anticaptcha = 'yes' if yn_choice(anticaptcha_msg) else 'no'
@@ -131,6 +136,8 @@ def parse_config():
         config.set('settings', 'username', username)
         config.set('settings', 'password', password)
         config.set('settings', 'logging', logging)
+        config.set('settings', 'auto_send_long_sms', auto_send_long_sms)
+
         config.add_section('captcha')
         config.set('captcha', 'anticaptcha', anticaptcha)
         config.set('captcha', 'anticaptcha_max_tries', 3)
@@ -151,12 +158,22 @@ def parse_config():
             logging_msg = 'Do you want to log all sent sms to %s?' % log_file
             logging = 'yes' if yn_choice(logging_msg) else 'no'
             config.set('settings', 'logging', logging)
+
+        try:
+            auto_send_long_sms = config.getboolean('settings',
+                                    'auto_send_long_sms')
+        except (ValueError, ConfigParser.NoOptionError):
+            auto_send_long_sms_msg = 'Do you want to send sms automatically, even if they are longer than 440 chars?'
+            auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg) else 'no'
+            config.set('settings', 'auto_send_long_sms', auto_send_long_sms)
+
         try:
             anticaptcha = config.getboolean('captcha', 'anticaptcha')
         except (ValueError, ConfigParser.NoOptionError):
             anticaptcha_msg = 'Do you want to use the anticaptcha service?'
             anticaptcha = 'yes' if yn_choice(anticaptcha_msg) else 'no'
             config.set('captcha', 'anticaptcha', anticaptcha)
+
         try:
             anticaptcha_max_tries = config.getint('captcha',
                                     'anticaptcha_max_tries')
@@ -170,9 +187,12 @@ def parse_config():
         anticaptcha_max_tries = 3
     if not anticaptcha in ['yes', True]:
         anticaptcha = False
+    if not auto_send_long_sms in ['yes', True]:
+        auto_send_long_sms = False
     return {'username': username,
             'password': password,
             'logging': logging,
+            'auto_send_long_sms': auto_send_long_sms,
             'anticaptcha': anticaptcha,
             'anticaptcha_max_tries': anticaptcha_max_tries}
 
@@ -443,19 +463,26 @@ def query_receiver(contacts=[]):
             return receiver_clean
 
 
-def send_sms(browser, receiver, logging=False):
+def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message=None):
     """Send SMS.
 
     Query for message and send SMS.
     """
-
     # Get message text
     while 1:
-        message = raw_input('Message: ').strip()
         if not message:
-            print 'Please enter a message'
-        elif len(unicode(message, 'utf-8')) > 440:
-            print 'Message too long (max 440 characters)'
+            message = unicode(raw_input('Message: ').strip(), 'utf-8')
+
+        elif len(message) > 440:
+            count = len(message)
+
+            if auto_send_long_sms or yn_choice('Message is %u characters long. Do you want to send it anyway?' % count):
+                i = 0
+                while i < count:
+                    send_sms(browser, receiver, logging, auto_send_long_sms, message[i:i + __xtra_sms_max_length - 1])
+                    i += __xtra_sms_max_length - 1
+            message = None
+            return
         else:
             break
 
@@ -558,7 +585,7 @@ def main():
                 while 1:
                     if not receiver_lock:
                         receiver = query_receiver(contacts)
-                    send_sms(browser, receiver, cfg['logging'])
+                    send_sms(browser, receiver, cfg['logging'], cfg['auto_send_long_sms'])
                     print "%s SMS remaining." % get_user_info(browser)[2]
                     if choice in ['n', 'new']:
                         break
