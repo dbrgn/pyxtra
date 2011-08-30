@@ -55,7 +55,6 @@ except ImportError as e:
 
 # Some configuration variables
 __debug = False  # Set to True to show debug output
-__fakesend = False  # Set to True to not send sms
 __tracebacks = False  # Set to True to show tracebacks
 __separator = '--------------------'
 __xtra_sms_max_length = 440  # Max length of xtrazone sms is 440
@@ -469,55 +468,46 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     Query for message and send SMS.
     """
     # Get message text
-    while 1:
-        if not message:
-            message = unicode(raw_input('Message: ').strip(), 'utf-8')
+    while not message:
+        message = unicode(raw_input('Message: ').strip(), 'utf-8')
 
-        elif len(message) > 440:
-            count = len(message)
-
-            if auto_send_long_sms or yn_choice('Message is %u characters long. Do you want to send it anyway?' % count):
-                i = 0
-                while i < count:
-                    send_sms(browser, receiver, logging, auto_send_long_sms, message[i:i + __xtra_sms_max_length - 1])
-                    i += __xtra_sms_max_length - 1
-            message = None
+    count = len(message)
+    if count > 440:
+        if auto_send_long_sms or yn_choice('Message is %u characters long. Do you want to send it anyway?' % count):
+            i = 0
+            while i < count:
+                send_sms(browser, receiver, logging, auto_send_long_sms, message[i:i + __xtra_sms_max_length - 1])
+                i += __xtra_sms_max_length - 1
             return
-        else:
-            break
 
-    if not __fakesend:
-        while 1:
-            # Actually send the SMS
-            url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
-                  '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
-            data = {'attachmentId': '',
-                    'attachments': '',
-                    'messagebody': message,
-                    'receiversnames': receiver,
-                    'recipients': '[]',
-                    }
-            browser.open(url, urllib.urlencode(data))
-            resp = json.loads(browser.response().read())
-            try:
-                if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
-                    resp['content']['isError'] != False):
-                    raise XtrazoneError('Unknown error sending SMS.')
-            except TypeError:  # Something went wrong.
-                if __tracebacks:
-                    print resp
-                if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
-                    print 'Session has expired. Reconnecting...'
-                    cfg = parse_config()
-                    login(browser, cfg['username'], cfg['password'],
-                          cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
-                else:
-                    raise XtrazoneError('Unknown error sending SMS.')
-            else:
-                print 'SMS sent successfully.'
-                break
+    # Actually send the SMS
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
+          '?route=%2Fmessaging%2Foutbox%2Fsendmobilemsg'
+    data = {'attachmentId': '',
+            'attachments': '',
+            'messagebody': message,
+            'receiversnames': receiver,
+            'recipients': '[]',
+            }
+    browser.open(url, urllib.urlencode(data))
+    resp = json.loads(browser.response().read())
+    try:
+        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+            resp['content']['isError'] != False):
+            raise XtrazoneError('Unknown error sending SMS.')
+    except TypeError:  # Something went wrong.
+        if __tracebacks:
+            print resp
+        if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
+            print 'Session has expired. Reconnecting...'
+            cfg = parse_config()
+            login(browser, cfg['username'], cfg['password'],
+                  cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
+            send_sms(browser, receiver, logging, auto_send_long_sms, message)
+        else:
+            raise XtrazoneError('Unknown error sending SMS.')
     else:
-        print 'SMS won\'t be send, because fakesend is activated.'
+        print 'SMS sent successfully.'
 
     # If desired, log SMS
     if logging:
