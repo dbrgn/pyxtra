@@ -451,7 +451,7 @@ def query_receiver(contacts=[]):
 
     # Get receiver number(s)
     while 1:
-        receiver = raw_input('Receiver(s): ').strip(',')
+        receiver = raw_input('Receiver(s): ').strip(', ')
         receiver_clean = replace_contacts(receiver)
         # Test whether all contacts have been matched
         if not re.sub('[ +,]', '', receiver_clean).isdigit():
