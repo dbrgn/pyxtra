@@ -451,7 +451,7 @@ def query_receiver(contacts=[]):
 
     # Get receiver number(s)
     while 1:
-        receiver = raw_input('Receiver(s): ').strip(', ')
+        receiver = raw_input('Receivers: ').strip(', ')
         receiver_clean = replace_contacts(receiver)
         # Test whether all contacts have been matched
         if not re.sub('[ +,]', '', receiver_clean).isdigit():
@@ -469,7 +469,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     """
     # Get message text
     while not message:
-        message = unicode(raw_input('Message: ').strip(), 'utf-8')
+        message = unicode(raw_input('Message:   ').strip(), 'utf-8')
 
     count = len(message)
     if count > 440:
