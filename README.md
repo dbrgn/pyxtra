@@ -62,6 +62,13 @@ A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.py
 Changelog
 ---------
 
+v1.4 (2011-08-31)
+
+- [add] Direct contact search (Issue #13)
+- [bug] Don't crash if user has no contacts (Issue #15)
+- [add] Possibility to send SMS longer than 440 characters (Issue #17)
+- [add] Improved autocompletion
+
 v1.3 (2011-08-05)
 
 - [add] Conversation mode (Issue #11)

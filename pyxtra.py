@@ -117,12 +117,13 @@ def parse_config():
         password = getpass.getpass('Password (ENTER to skip): ').strip()
 
         # Logging
-        logging_msg = 'Do you want to log all sent sms to %s?' % log_file
+        logging_msg = 'Do you want to log all sent SMS to %s?' % log_file
         logging = 'yes' if yn_choice(logging_msg) else 'no'
 
         # Auto send long sms
-        auto_send_long_sms_msg = 'Do you want to send sms automatically, even if they are longer than 440 chars?'
-        auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg) else 'no'
+        auto_send_long_sms_msg = 'Do you want to ignore warnings for SMS ' \
+                                 'longer than %u characters?' % __xtra_sms_max_length
+        auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg, 'n') else 'no'
 
         # Anticaptcha
         anticaptcha_msg = 'Do you want to use the anticaptcha service?'
@@ -149,30 +150,36 @@ def parse_config():
                 config.add_section(s)
             except ConfigParser.DuplicateSectionError:
                 pass
+        
+        # Get user data
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
+
+        # Get logging settings
         try:
             logging = config.getboolean('settings', 'logging')
         except (ValueError, ConfigParser.NoOptionError):
-            logging_msg = 'Do you want to log all sent sms to %s?' % log_file
+            logging_msg = 'Do you want to log all sent SMS to %s?' % log_file
             logging = 'yes' if yn_choice(logging_msg) else 'no'
             config.set('settings', 'logging', logging)
 
+        # Get long sms settings
         try:
             auto_send_long_sms = config.getboolean('settings',
                                     'auto_send_long_sms')
         except (ValueError, ConfigParser.NoOptionError):
-            auto_send_long_sms_msg = 'Do you want to send sms automatically, even if they are longer than 440 chars?'
-            auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg) else 'no'
+            auto_send_long_sms_msg = 'Do you want to ignore warnings for SMS ' \
+                                     'longer than %u characters?' % __xtra_sms_max_length
+            auto_send_long_sms = 'yes' if yn_choice(auto_send_long_sms_msg, 'n') else 'no'
             config.set('settings', 'auto_send_long_sms', auto_send_long_sms)
 
+        # Get anticaptcha settings
         try:
             anticaptcha = config.getboolean('captcha', 'anticaptcha')
         except (ValueError, ConfigParser.NoOptionError):
             anticaptcha_msg = 'Do you want to use the anticaptcha service?'
             anticaptcha = 'yes' if yn_choice(anticaptcha_msg) else 'no'
             config.set('captcha', 'anticaptcha', anticaptcha)
-
         try:
             anticaptcha_max_tries = config.getint('captcha',
                                     'anticaptcha_max_tries')
@@ -182,6 +189,7 @@ def parse_config():
         # Write possibly changed configuration file
         config.write(open(config_file, 'w'))
 
+    # Set default values
     if not 'anticaptcha_max_tries' in locals():
         anticaptcha_max_tries = 3
     if not anticaptcha in ['yes', True]:
@@ -430,8 +438,9 @@ def query_receiver(contacts=[]):
             return options[state] + ', '
         except IndexError:
             return None
+
     readline.set_completer(completer)
-    readline.set_completer_delims(',')
+    readline.set_completer_delims(', ')
     if sys.platform == 'darwin':
         readline.parse_and_bind("bind ^I rl_complete")
     else:
@@ -454,7 +463,7 @@ def query_receiver(contacts=[]):
         receiver = raw_input('Receivers: ').strip(', ')
         receiver_clean = replace_contacts(receiver)
         # Test whether all contacts have been matched
-        if not re.sub('[ +,]', '', receiver_clean).isdigit():
+        if not re.sub('[ *,]', '', receiver_clean).isdigit():
             print 'Unmatched contact or invalid phone number. ' + \
                    'Only comma separated contact names or numbers are allowed.'
         else:
@@ -472,8 +481,10 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
         message = unicode(raw_input('Message:   ').strip(), 'utf-8')
 
     count = len(message)
-    if count > 440:
-        if auto_send_long_sms or yn_choice('Message is %u characters long. Do you want to send it anyway?' % count):
+    if count > __xtra_sms_max_length:
+        if auto_send_long_sms or yn_choice('Message is %u characters long and ' \
+                                           'will be split into several SMS. ' \
+                                           'Do you want to send it anyway?' % count):
             i = 0
             while i < count:
                 send_sms(browser, receiver, logging, auto_send_long_sms, message[i:i + __xtra_sms_max_length - 1])
