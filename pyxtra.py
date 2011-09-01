@@ -150,7 +150,7 @@ def parse_config():
                 config.add_section(s)
             except ConfigParser.DuplicateSectionError:
                 pass
-        
+
         # Get user data
         username = config.get('settings', 'username')
         password = config.get('settings', 'password')
