@@ -60,16 +60,6 @@ __separator = '--------------------'
 __xtra_sms_max_length = 440  # Max length of xtrazone sms is 440
 
 
-class XtrazoneError(Exception):
-    """Errors related with the Xtrazone page."""
-    pass
-
-
-class CaptchaError(XtrazoneError):
-    """Errors related with the CAPTCHA."""
-    pass
-
-
 def yn_choice(message, default='y'):
     choices = 'Y/n' if default.lower() in ('y', 'yes') else 'y/N'
     choice = raw_input("%s (%s) " % (message, choices))
@@ -266,13 +256,9 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
                 try:
                     captcha = gorrion.get_captcha(captcha_token)
-                except gorrion.GorrionError as e:
-                    print str(e)
+                except Exception as e:
                     anticaptcha = False
-                    raise CaptchaError(str(e))
-                except:
-                    anticaptcha = False
-                    raise CaptchaError('Unknown error occured.')
+                    print 'Error, cracking CAPTCHA failed (%s)' % str(e)
 
             # User has to enter CAPTCHA manually
             else:
@@ -320,9 +306,9 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 
             resp = json.loads(browser.response().read())
             if resp['status'] == 'captcha_failed':
-                raise CaptchaError('CAPTCHA failed: %s' % resp['message'])
+                raise RuntimeError('CAPTCHA failed: %s' % resp['message'])
             if resp['status'] != 'login_ok':
-                raise XtrazoneError('Login failed: %s' % resp['message'])
+                raise RuntimeError('Login failed: %s' % resp['message'])
 
             # Everything worked fine :)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
@@ -333,7 +319,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                         print 'Anticaptcha reporting: %s' % str(e)
             break
 
-        except CaptchaError as e:
+        except RuntimeError as e:
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 if captcha:
                     pass  # Possibly report to gorrion
@@ -405,7 +391,7 @@ def add_contact(browser, prename='', name='', nr=''):
     resp['content']
 
     if resp['content']['isError'] == True:
-        raise XtrazoneError(
+        raise RuntimeError(
                 'Adding contact failed: %s' % resp['content']['headline'])
     print 'Successfully saved contact %s %s.' % (prename, name)
 
@@ -505,7 +491,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     try:
         if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
             resp['content']['isError'] != False):
-            raise XtrazoneError('Unknown error sending SMS.')
+            raise RuntimeError('Unknown error sending SMS.')
     except TypeError:  # Something went wrong.
         if __tracebacks:
             print resp
@@ -516,7 +502,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
                   cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
             send_sms(browser, receiver, logging, auto_send_long_sms, message)
         else:
-            raise XtrazoneError('Unknown error sending SMS.')
+            raise RuntimeError('Unknown error sending SMS.')
     else:
         print 'SMS sent successfully.'
 
@@ -602,7 +588,7 @@ def main():
             except KeyboardInterrupt:
                 print '\nCancel...'
                 continue
-            except XtrazoneError as e:
+            except RuntimeError as e:
                 print 'Error: %s' % str(e)
         elif choice in ['s', 'search']:
             searchstr = params
@@ -647,7 +633,7 @@ if __name__ == '__main__':
             print 'Error: %s' % msg
             sys.exit(1)
         else:
-            raise XtrazoneError(msg)
+            raise RuntimeError(msg)
     except ConfigParser.NoOptionError:
         msg = 'Error in configuration file. Please remove your configfile ' + \
               '(usually in ~/.pyxtra/) and try again.'
@@ -655,7 +641,7 @@ if __name__ == '__main__':
             print 'Error: %s' % msg
             sys.exit(1)
         else:
-            raise XtrazoneError(msg)
+            raise RuntimeError(msg)
     except Exception as e:
         if not __tracebacks:
             print 'Error: %s' % str(e)
