@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 
 from distutils.core import setup
+try:
+    import py2exe
+except ImportError:
+    pass
 
 setup(name='pyxtra',
       version='1.4',
@@ -14,6 +18,7 @@ setup(name='pyxtra',
       requires=['BeautifulSoup', 'PIL', 'mechanize', 'xlrd', 'readline', 'Tkinter'], 
       py_modules=['pyxtra', 'gorrion'],
       scripts=['pyxtra.py'],
+      console=['pyxtra.py'],
       classifiers=[
           'Development Status :: Production/Stable',
           'Environment :: Console',
