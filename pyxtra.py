@@ -436,6 +436,7 @@ def query_receiver(contacts=[]):
     def validate_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
+        numbers = map(lambda x: unicode(x, 'utf-8'), numbers)  # To unicode
         invalid_numbers = []
         for nr in numbers:
             # TODO: could several numbers match?
@@ -448,7 +449,7 @@ def query_receiver(contacts=[]):
                 if not re.match(__nr_validation_regex, nr.replace(' ', '')):
                     invalid_numbers.append(nr)
         if invalid_numbers:
-            raise ValueError(', '.join(invalid_numbers))
+            raise ValueError(', '.join([nr.strip() for nr in invalid_numbers]))
         return text
 
     # Get receiver number(s)
@@ -457,7 +458,7 @@ def query_receiver(contacts=[]):
         try:
             receiver_clean = validate_contacts(receiver)
         except ValueError as e:
-            print 'Error: Unmatched contact or invalid phone number (%s).' % str(e)
+            print 'Error: Unmatched contact or invalid phone number (%s).' % unicode(e)
         else:
             readline.set_completer()  # Disable tab completion
             return receiver_clean
