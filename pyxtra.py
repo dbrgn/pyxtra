@@ -58,6 +58,7 @@ __debug = False  # Set to True to show debug output
 __tracebacks = False  # Set to True to show tracebacks
 __separator = '--------------------'
 __xtra_sms_max_length = 440  # Max length of xtrazone sms is 440
+__nr_validation_regex = r'^(((((\+|00)?41)|0)7[6-9])|((\+|00)?423))\d{7}$'
 
 
 def yn_choice(message, default='y'):
@@ -432,26 +433,31 @@ def query_receiver(contacts=[]):
     else:
         readline.parse_and_bind("tab: complete")
 
-    def replace_contacts(text):
+    def validate_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
+        invalid_numbers = []
         for nr in numbers:
+            # TODO: could several numbers match?
             f = [c for c in contacts
                    if c[2].strip().lower() == nr.strip().lower()]
-            try:
+            if f:
                 text = text.replace(nr, '0' + str(f[0][1])[2:11])
-            except IndexError:
-                pass
+            else:
+                # Current nr is not a name in address book. Validate it.
+                if not re.match(__nr_validation_regex, nr.replace(' ', '')):
+                    invalid_numbers.append(nr)
+        if invalid_numbers:
+            raise ValueError(', '.join(invalid_numbers))
         return text
 
     # Get receiver number(s)
     while 1:
         receiver = raw_input('Receivers: ').strip(', ')
-        receiver_clean = replace_contacts(receiver)
-        # Test whether all contacts have been matched
-        if not re.sub('[ *,]', '', receiver_clean).isdigit():
-            print 'Unmatched contact or invalid phone number. ' + \
-                   'Only comma separated contact names or numbers are allowed.'
+        try:
+            receiver_clean = validate_contacts(receiver)
+        except ValueError as e:
+            print 'Error: Unmatched contact or invalid phone number (%s).' % str(e)
         else:
             readline.set_completer()  # Disable tab completion
             return receiver_clean

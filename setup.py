@@ -8,7 +8,7 @@ except ImportError:
     pass
 
 setup(name='pyxtra',
-      version='1.4',
+      version='1.4beta',
       author='Danilo Bargen, Peter Manser',
       author_email='gezuru@gmail.com',
       url='https://github.com/gwrtheyrn/pyxtra/',
