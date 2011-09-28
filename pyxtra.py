@@ -417,17 +417,18 @@ def query_receiver(contacts=[]):
     """Query for receiver number and return it."""
 
     # Configure and enable tab completion
+    delimiter = ', ' if sys.platform == 'darwin' else ','
     def completer(text, state):
         """Contacts completer function for readline module"""
         options = [x[2].strip() for x in contacts
                    if x[2].lower().startswith(text.strip().lower())]
         try:
-            return options[state] + ', '
+            return options[state] + delimiter
         except IndexError:
             return None
 
     readline.set_completer(completer)
-    readline.set_completer_delims(', ')
+    readline.set_completer_delims(delimiter)
     if sys.platform == 'darwin':
         readline.parse_and_bind("bind ^I rl_complete")
     else:
