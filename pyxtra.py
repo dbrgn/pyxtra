@@ -437,7 +437,7 @@ def query_receiver(contacts=[]):
     def validate_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
-        numbers = map(lambda x: unicode(x, 'utf-8'), numbers)  # To unicode
+        numbers = map(lambda x: unicode(x, sys.stdin.encoding), numbers)  # To unicode
         invalid_numbers = []
         for nr in numbers:
             # TODO: could several numbers match?
@@ -474,7 +474,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     while not message:
         message = raw_input('Message: ').strip()
 
-    count = len(unicode(message, 'utf-8'))
+    count = len(unicode(message, sys.stdin.encoding))
     if count > __xtra_sms_max_length:
         if auto_send_long_sms or yn_choice('Message is %u characters long and ' \
                                            'will be split into several SMS. ' \
