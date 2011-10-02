@@ -473,8 +473,9 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     # Get message text
     while not message:
         message = raw_input('Message: ').strip()
+        message = unicode(message, sys.stdin.encoding).encode('utf-8') # To utf-8
 
-    count = len(unicode(message, sys.stdin.encoding))
+    count = len(message)
     if count > __xtra_sms_max_length:
         if auto_send_long_sms or yn_choice('Message is %u characters long and ' \
                                            'will be split into several SMS. ' \
