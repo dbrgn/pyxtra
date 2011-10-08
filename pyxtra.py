@@ -254,7 +254,8 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 
             # Try to crack CAPTCHA automatically (Service by gorrion.ch)
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
-                print 'Trying to crack CAPTCHA... (Try %s)' % captcha_tries
+                if captcha_tries == 1:
+                    print 'Trying to crack CAPTCHA...'
                 try:
                     captcha = gorrion.get_captcha(captcha_token)
                 except Exception as e:
@@ -389,9 +390,8 @@ def add_contact(browser, prename='', name='', nr=''):
     browser.open(url, urllib.urlencode(data))
 
     resp = json.loads(browser.response().read())
-    resp['content']
 
-    if resp['content']['isError'] == True:
+    if resp['content']['isError']:
         raise RuntimeError(
                 'Adding contact failed: %s' % resp['content']['headline'])
     print 'Successfully saved contact %s %s.' % (prename, name)
@@ -601,7 +601,7 @@ def main():
         elif choice in ['s', 'search']:
             searchstr = params
 
-            if (not searchstr):
+            if not searchstr:
                 try:
                     searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
                 except KeyboardInterrupt:
