@@ -36,9 +36,13 @@ If you want to get the latest stable version, visit the [download page](https://
 
 1. Prerequisites: You need to install python>=2.5 and tk
 
-2. Install dependencies. If you haven't got pip installed, use `easy_install` instead.
+2. Install dependencies. 
 
-        sudo pip install BeautifulSoup PIL mechanize xlrd
+        sudo pip install -r requirements.txt
+
+    If you haven't got pip installed, use `easy_install` instead.
+
+        sudo easy_install BeautifulSoup PIL mechanize xlrd
 
     Ubuntu/Debian users should use apt instead of pip:
 
