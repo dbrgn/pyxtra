@@ -473,7 +473,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     # Get message text
     while not message:
         message = raw_input('Message: ').strip()
-        message = unicode(message, sys.stdin.encoding).encode('utf-8') # To utf-8
+        message = unicode(message, sys.stdin.encoding).encode('utf-8')  # To utf-8
 
     count = len(message)
     if count > __xtra_sms_max_length:
@@ -482,7 +482,8 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
                                            'Do you want to send it anyway?' % count):
             i = 0
             while i < count:
-                send_sms(browser, receiver, logging, auto_send_long_sms, message[i:i + __xtra_sms_max_length - 1])
+                send_sms(browser, receiver, logging, auto_send_long_sms,
+                         message[i:i + __xtra_sms_max_length - 1])
                 i += __xtra_sms_max_length - 1
             return
 
