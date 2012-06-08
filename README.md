@@ -15,28 +15,41 @@ Features
 - CAPTCHA-Recognition (service by http://gorrion.ch/, thanks!)
 - Headless setup possible (if CAPTCHA-Recognition is enabled)
 
-
-Requirements
-------------
-
-- python2
-- python-mechanize
-- python-beautifulsoup
-- python-xlrd
-- python-tk
-- python-imaging
-- python-imaging-tk (Ubuntu/Debian users only)
-- python-simplejson (for Python < 2.6 only)
+**Warning**: There might be some issues when having set Xtrazone to
+French or Italian (e.g. you are prompted to enter the CAPTCHA twice).
+For best experience, set Xtrazone language to German.
+(FR: Profil > Mes paramètres de compte > Langue Xtra-Zone,
+IT: Profilo > Le impostazioni del mio account > Lingua Xtra-Zone)
 
 
 Installation
 ------------
 
-If you want to get the latest stable version, visit the [download page](https://github.com/gwrtheyrn/pyxtra/downloads) instead of downloading the current source.
+### Prerequisites
 
-1. Prerequisites: You need to install python>=2.5 and tk
+1. You need python>=2.5 and tk
 
-2. Install dependencies. 
+1. If you're still on python 2.5, install `simplejson`:
+
+        sudo pip install simplejson
+
+    ...or if you're Debian / Ubuntu user:
+
+        sudo aptitude install python-simplejson
+
+### Install via pip
+
+This is the recommended way of installing pyxtra.
+
+    sudo pip install pyxtra
+
+### Manual installation
+
+Alternatively, you can install pyxtra the manual way.
+
+1. Download the [current stable version](https://github.com/gwrtheyrn/pyxtra/zipball/stable).
+
+1. Install dependencies. 
 
         sudo pip install -r requirements.txt
 
@@ -44,19 +57,13 @@ If you want to get the latest stable version, visit the [download page](https://
 
         sudo easy_install BeautifulSoup PIL mechanize xlrd
 
-    Ubuntu/Debian users should use apt instead of pip:
+    Ubuntu/Debian users could also use apt instead of pip:
 
-        sudo apt-get install python python-tk python-mechanize python-beautifulsoup python-xlrd python-imaging python-imaging-tk
+        sudo apt-get install python-mechanize python-beautifulsoup python-xlrd python-imaging python-imaging-tk
 
-3. Install pyxtra
+1. Install pyxtra
 
         sudo python setup.py install
-
-**Warning**: There might be some issues when having set Xtrazone to
-French or Italian (e.g. you are prompted to enter the CAPTCHA twice).
-For best experience, set Xtrazone language to German.
-(FR: Profil > Mes paramètres de compte > Langue Xtra-Zone,
-IT: Profilo > Le impostazioni del mio account > Lingua Xtra-Zone)
 
 
 FAQ
@@ -72,12 +79,13 @@ A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.py
 Changelog
 ---------
 
-v1.5 (2012-06-08)
+v1.5 (2012-06-09)
 
 - [bug] Fixed unicode bugs (Issue #18, #19)
 - [bug] Fixed phone number validation (Issue #20)
 - [bug] Fixed readline/delimiter problems on Linux
 - [bug] Fixed pyxtra for people using Xtrazone in French or Italian
+- [feature] Package is on pypi!
 
 v1.4 (2011-08-31)
 
