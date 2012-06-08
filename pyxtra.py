@@ -229,12 +229,12 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 password = getpass.getpass('Xtrazone password: ').strip()
 
             # Get CAPTCHA URL
-            browser.open('https://xtrazone.sso.bluewin.ch/index.html.de')
+            browser.open('https://xtrazone.sso.bluewin.ch/index.html')
 
             browser.addheaders = [
                     ('X-Requested-With', 'XMLHttpRequest'),
                     ('X-Header-XtraZone', 'XtraZone'),
-                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
+                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
                     ]
             url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
                    '?route=%2Flogin%2Fgetcaptcha'
@@ -294,7 +294,7 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             browser.addheaders = [
                     ('X-Requested-With', 'XMLHttpRequest'),
                     ('X-Header-XtraZone', 'XtraZone'),
-                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html.de'),
+                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
                     ]
             url = 'https://xtrazone.sso.bluewin.ch/index.php/22,39,ajax_json,,,157/'
             data = {'action': 'ssoLogin',
