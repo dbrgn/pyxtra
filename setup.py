@@ -7,20 +7,25 @@ try:
 except ImportError:
     pass
 
+readme = open('README.md').read()
+
 setup(name='pyxtra',
       version='1.5',
       author='Danilo Bargen, Peter Manser',
       author_email='gezuru@gmail.com',
       url='https://github.com/gwrtheyrn/pyxtra/',
+      keywords=['sms', 'xtrazone', 'swisscom', 'communication'],
       description='A small commandline utility to access the Swisscom Xtrazone SMS service',
+      long_description=readme,
       platforms=['Unix', 'Mac'],
       license='GPLv3',
-      requires=['BeautifulSoup', 'PIL', 'mechanize', 'xlrd', 'readline', 'Tkinter'], 
+      requires=['BeautifulSoup', 'PIL', 'mechanize', 'xlrd', 'readline'],
+      provides=['pyxtra', 'gorrion'],
       py_modules=['pyxtra', 'gorrion'],
       scripts=['pyxtra.py'],
       console=['pyxtra.py'],
       classifiers=[
-          'Development Status :: Production/Stable',
+          'Development Status :: 5 - Production/Stable',
           'Environment :: Console',
           'License :: OSI Approved :: GNU General Public License (GPL)',
           'Natural Language :: English',

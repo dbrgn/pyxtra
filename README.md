@@ -37,6 +37,7 @@ Installation
 
         sudo aptitude install python-simplejson
 
+
 ### Install via pip
 
 This is the recommended way of installing pyxtra.
