@@ -4,10 +4,10 @@
 """A small command-line utility written in Python to access the Swisscom
 Xtrazone SMS service
 
-Version: 1.4
+Version: 1.5
 
 License:
-Copyright (C) 2011 Danilo Bargen, Peter Manser
+Copyright (C) 2011, 2012 Danilo Bargen, Peter Manser
 
 pyxtra is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software

@@ -52,6 +52,12 @@ If you want to get the latest stable version, visit the [download page](https://
 
         sudo python setup.py install
 
+**Warning**: There might be some issues when having set Xtrazone to
+French or Italian (e.g. you are prompted to enter the CAPTCHA twice).
+For best experience, set Xtrazone language to German.
+(FR: Profil > Mes paramètres de compte > Langue Xtra-Zone,
+IT: Profilo > Le impostazioni del mio account > Lingua Xtra-Zone)
+
 
 FAQ
 ---
@@ -65,6 +71,13 @@ A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.py
 
 Changelog
 ---------
+
+v1.5 (2012-06-08)
+
+- [bug] Fixed unicode bugs (Issue #18, #19)
+- [bug] Fixed phone number validation (Issue #20)
+- [bug] Fixed readline/delimiter problems on Linux
+- [bug] Fixed pyxtra for people using Xtrazone in French or Italian
 
 v1.4 (2011-08-31)
 
@@ -113,7 +126,7 @@ Contributors
 License
 -------
 
-Copyright (C) 2011 Danilo Bargen, Peter Manser
+Copyright (C) 2011, 2012 Danilo Bargen, Peter Manser
 
 pyxtra is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
