@@ -344,8 +344,7 @@ def get_user_info(browser):
     nickname = (soup.find('div', {'class': 'userinfo'})
                 .find('h5').contents[0].strip())
     fullname = (soup.find('div', {'class': 'userinfo'})
-                .find('a', {'href': '/index.php/20?route=%2Fprofile'})
-                .contents[0].strip())
+                .find('h6').find('a').contents[0].strip())
     remaining = (int(re.search('&nbsp;([0-9]{1,3})&nbsp;',
                  soup.find('div', {'class': 'userinfo'}).find('span')
                  .contents[0]).group(1)))
@@ -499,7 +498,12 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     browser.open(url, urllib.urlencode(data))
     resp = json.loads(browser.response().read())
     try:
-        if (resp['content']['headline'] != 'Verarbeitung erfolgreich' or
+        valid_headlines = (
+            u'Verarbeitung erfolgreich',
+            u'Traitement réussi.',
+            u'Elaborazione riuscita.',
+        )
+        if (resp['content']['headline'] not in valid_headlines or
             resp['content']['isError'] != False):
             raise RuntimeError('Unknown error sending SMS.')
     except TypeError:  # Something went wrong.
