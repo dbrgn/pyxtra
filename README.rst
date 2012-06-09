@@ -20,8 +20,8 @@ Features
 **Warning**: There might be some issues when having set Xtrazone to
 French or Italian (e.g. you are prompted to enter the CAPTCHA twice).
 For best experience, set Xtrazone language to German.
-(FR: Profil > Mes paramètres de compte > Langue Xtra-Zone,
-IT: Profilo > Le impostazioni del mio account > Lingua Xtra-Zone)
+(FR: *Profil > Mes paramètres de compte > Langue Xtra-Zone*,
+IT: *Profilo > Le impostazioni del mio account > Lingua Xtra-Zone*)
 
 
 ============
