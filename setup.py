@@ -1,14 +1,27 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from distutils.core import setup
+import sys
+import os
+from setuptools import setup
 try:
     import py2exe
 except ImportError:
     pass
 
-readme = open('README.rst').read()
+# Additional commands
+if sys.argv[-1] == 'publish':
+    os.system('python setup.py sdist upload')
+    sys.exit()
 
+# Requirements
+f = open('requirements.txt', 'r')
+lines = f.readlines()
+requirements = [l.strip().strip('\n') for l in lines if l.strip() and not l.strip().startswith('#')]
+if sys.version_info.major == 2 and sys.version_info.minor == 5:
+    requirements.append('simplejson')
+
+# Setup
 setup(name='pyxtra',
       version='1.5',
       author='Danilo Bargen, Peter Manser',
@@ -16,10 +29,11 @@ setup(name='pyxtra',
       url='https://github.com/gwrtheyrn/pyxtra/',
       keywords=['sms', 'xtrazone', 'swisscom', 'communication'],
       description='A small commandline utility to access the Swisscom Xtrazone SMS service',
-      long_description=readme,
+      long_description=open('README.rst').read(),
       platforms=['Unix', 'Mac'],
-      license='GPLv3',
+      license=open('LICENSE.txt').read(),
       requires=['BeautifulSoup', 'PIL', 'mechanize', 'xlrd', 'readline'],
+      install_requires=requirements,
       provides=['pyxtra', 'gorrion'],
       py_modules=['pyxtra', 'gorrion'],
       scripts=['pyxtra.py'],
