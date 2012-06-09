@@ -1,13 +1,15 @@
+######
 pyxtra
-======
+######
 
 pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS service. It is being developed for Linux- and OS X-based operating systems.
 
-![Screenshot](https://github.com/gwrtheyrn/pyxtra/raw/master/screenshot.png)
+.. image:: https://github.com/gwrtheyrn/pyxtra/raw/master/screenshot.png
 
 
+========
 Features
---------
+========
 
 - Sending SMS messages from the command line
 - Access and add contacts
@@ -22,63 +24,71 @@ For best experience, set Xtrazone language to German.
 IT: Profilo > Le impostazioni del mio account > Lingua Xtra-Zone)
 
 
+============
 Installation
-------------
+============
 
-### Prerequisites
+Prerequisites
+-------------
 
-1. You need python>=2.5 and tk
+#. You need python>=2.5 and tk
 
-1. If you're still on python 2.5, install `simplejson`:
+#. If you're still on python 2.5, install `simplejson` ::
 
-        sudo pip install simplejson
+    $ sudo pip install simplejson
 
-    ...or if you're Debian / Ubuntu user:
+   ...or if you're Debian / Ubuntu user::
 
-        sudo aptitude install python-simplejson
+    $ sudo aptitude install python-simplejson
 
+Install via pip
+---------------
 
-### Install via pip
+This is the recommended way of installing pyxtra. ::
 
-This is the recommended way of installing pyxtra.
+    $ sudo pip install pyxtra
 
-    sudo pip install pyxtra
-
-### Manual installation
+Manual installation
+-------------------
 
 Alternatively, you can install pyxtra the manual way.
 
-1. Download the [current stable version](https://github.com/gwrtheyrn/pyxtra/zipball/stable).
+#. Download the `current stable version <https://github.com/gwrtheyrn/pyxtra/zipball/stable>`_.
 
-1. Install dependencies. 
+#. Install dependencies. ::
 
-        sudo pip install -r requirements.txt
+        $ sudo pip install -r requirements.txt
 
-    If you haven't got pip installed, use `easy_install` instead.
+   If you haven't got pip installed, use `easy_install` instead. ::
 
-        sudo easy_install BeautifulSoup PIL mechanize xlrd
+        $ sudo easy_install BeautifulSoup PIL mechanize xlrd
 
-    Ubuntu/Debian users could also use apt instead of pip:
+   Ubuntu/Debian users could also use apt instead of pip::
 
-        sudo apt-get install python-mechanize python-beautifulsoup python-xlrd python-imaging python-imaging-tk
+        $ sudo apt-get install python-mechanize python-beautifulsoup \
+        python-xlrd python-imaging python-imaging-tk
 
-1. Install pyxtra
+#. Install pyxtra ::
 
-        sudo python setup.py install
+        $ sudo python setup.py install
 
 
+===
 FAQ
----
+===
 
-#### Q: How can I easily select the receiver from the contacts list when writing a new SMS?
+**Q: How can I easily select the receiver from the contacts list when writing a new SMS?**
+
 A: pyxtra supports tab completion. Simply start typing a name and press the `tab` key.
 
-#### Q: How can I run pyxtra in a headless setup (e.g. on my server)?
+**Q: How can I run pyxtra in a headless setup (e.g. on my server)?**
+
 A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.pyxtra/config` to a higher number.
 
 
+=========
 Changelog
----------
+=========
 
 v1.5 (2012-06-09)
 
@@ -119,21 +129,24 @@ v1.0 (2011-03-17)
 - First version released
 
 
+=======
 Authors
--------
+=======
 
 - Danilo Bargen (http://ich-wars-nicht.ch/)
 - Peter Manser (http://petermanser.ch/)
 
 
+============
 Contributors
-------------
+============
 
 - Sämy Zehnder (Anticaptcha Service, http://gorrion.ch/)
 
 
+=======
 License
--------
+=======
 
 Copyright (C) 2011, 2012 Danilo Bargen, Peter Manser
 

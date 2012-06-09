@@ -7,7 +7,7 @@ try:
 except ImportError:
     pass
 
-readme = open('README.md').read()
+readme = open('README.rst').read()
 
 setup(name='pyxtra',
       version='1.5',
@@ -23,7 +23,6 @@ setup(name='pyxtra',
       provides=['pyxtra', 'gorrion'],
       py_modules=['pyxtra', 'gorrion'],
       scripts=['pyxtra.py'],
-      console=['pyxtra.py'],
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Environment :: Console',
