@@ -133,7 +133,7 @@ v1.0 (2011-03-17)
 Authors
 =======
 
-- Danilo Bargen (http://ich-wars-nicht.ch/)
+- Danilo Bargen (http://dbrgn.ch/)
 - Peter Manser (http://petermanser.ch/)
 
 
