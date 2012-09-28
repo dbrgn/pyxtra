@@ -144,6 +144,13 @@ Contributors
 - Sämy Zehnder (Anticaptcha Service, http://gorrion.ch/)
 
 
+==========
+Sourcecode
+==========
+
+Sourcecode is available on Github: https://github.com/gwrtheyrn/pyxtra
+
+
 =======
 License
 =======
