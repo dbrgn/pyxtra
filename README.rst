@@ -96,7 +96,7 @@ v1.5 (2012-06-09)
 - [bug] Fixed phone number validation (Issue #20)
 - [bug] Fixed readline/delimiter problems on Linux
 - [bug] Fixed pyxtra for people using Xtrazone in French or Italian
-- [feature] Package is on pypi!
+- [add] Package is on pypi!
 
 v1.4 (2011-08-31)
 
