@@ -4,3 +4,5 @@
 MANIFEST
 ssl/*
 venv
+pyxtra.egg-info/
+setup.cfg
