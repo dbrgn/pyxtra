@@ -6,3 +6,4 @@ ssl/*
 venv
 pyxtra.egg-info/
 setup.cfg
+*.sqp

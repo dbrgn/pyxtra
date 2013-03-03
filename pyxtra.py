@@ -7,7 +7,7 @@ Xtrazone SMS service
 Version: 1.5
 
 License:
-Copyright (C) 2011, 2012 Danilo Bargen, Peter Manser
+Copyright (C) 2011-2013 Danilo Bargen, Peter Manser and contributors.
 
 pyxtra is free software: you can redistribute it and/or modify it under the
 terms of the GNU General Public License as published by the Free Software
@@ -38,7 +38,7 @@ try:
     import readline
     import json
     import mechanize
-    from BeautifulSoup import BeautifulSoup
+    from bs4 import BeautifulSoup
     import xlrd
     import Tkinter
     from PIL import Image, ImageTk
@@ -338,16 +338,13 @@ def get_user_info(browser):
                  '20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
     resp = json.loads(browser.response().read())
 
-    # Parse HTML
     html = resp['content']
     soup = BeautifulSoup(html)
-    nickname = (soup.find('div', {'class': 'userinfo'})
-                .find('h5').contents[0].strip())
-    fullname = (soup.find('div', {'class': 'userinfo'})
-                .find('h6').find('a').contents[0].strip())
-    remaining = (int(re.search('&nbsp;([0-9]{1,3})&nbsp;',
-                 soup.find('div', {'class': 'userinfo'}).find('span')
-                 .contents[0]).group(1)))
+    userinfo = soup.find('div', 'userinfo')
+
+    nickname = userinfo.find('h5').text
+    fullname = userinfo.find('h6').text
+    remaining = filter(lambda c: c.isdigit(), userinfo.find('span').text)
 
     return nickname, fullname, remaining
 
