@@ -76,7 +76,7 @@ def remove_accents(ustr):
 
     """
     nkfd_form = unicodedata.normalize('NFKD', unicode(ustr))
-    return u"".join([c for c in nkfd_form if not unicodedata.combining(c)])
+    return u''.join([c for c in nkfd_form if not unicodedata.combining(c)])
 
 
 def parse_config():
@@ -207,9 +207,8 @@ def init():
     b.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
     # User agent
     b.addheaders = [
-            ('User-agent', 'Mozilla/4.0 (compatible; MSIE 8.0; \
-                            Windows NT 6.0; Trident/4.0)'),
-            ]
+        ('User-agent', 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)'),
+    ]
     # Debugging stuff
     if __debug:
         b.set_debug_http(True)
@@ -232,10 +231,10 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
             browser.open('https://xtrazone.sso.bluewin.ch/index.html')
 
             browser.addheaders = [
-                    ('X-Requested-With', 'XMLHttpRequest'),
-                    ('X-Header-XtraZone', 'XtraZone'),
-                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
-                    ]
+                ('X-Requested-With', 'XMLHttpRequest'),
+                ('X-Header-XtraZone', 'XtraZone'),
+                ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
+            ]
             url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/' \
                    '?route=%2Flogin%2Fgetcaptcha'
             data = {'action': 'getCaptcha',
@@ -270,13 +269,9 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 captcha_url = 'http:%s' % resp['content']['messages']['operation']['imgUrl']
                 # Display CAPTCHA in a new window
                 tk_root = Tkinter.Tk(className='CAPTCHA')
-                img = ImageTk.PhotoImage(
-                        Image.open(
-                          StringIO(
-                            urllib.urlopen(captcha_url).read()
-                          )
-                        )
-                      )
+                img_bytes = StringIO(urllib.urlopen(captcha_url).read())
+                img_obj = Image.open(img_bytes)
+                img = ImageTk.PhotoImage(img_obj)
                 captcha_label = Tkinter.Label(tk_root, image=img)
                 captcha_label.pack()
 
@@ -292,18 +287,19 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 
             # Log in
             browser.addheaders = [
-                    ('X-Requested-With', 'XMLHttpRequest'),
-                    ('X-Header-XtraZone', 'XtraZone'),
-                    ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
-                    ]
+                ('X-Requested-With', 'XMLHttpRequest'),
+                ('X-Header-XtraZone', 'XtraZone'),
+                ('Referer', 'https://xtrazone.sso.bluewin.ch/index.html'),
+            ]
             url = 'https://xtrazone.sso.bluewin.ch/index.php/22,39,ajax_json,,,157/'
-            data = {'action': 'ssoLogin',
-                    'do_sso_login': 1,
-                    'passphrase': captcha,
-                    'sso_password': password,
-                    'sso_user': username,
-                    'token': captcha_token,
-                    }
+            data = {
+                'action': 'ssoLogin',
+                'do_sso_login': 1,
+                'passphrase': captcha,
+                'sso_password': password,
+                'sso_user': username,
+                'token': captcha_token,
+            }
             browser.open(url, urllib.urlencode(data))
 
             resp = json.loads(browser.response().read())
@@ -334,8 +330,8 @@ def get_user_info(browser):
 
     Return nickname, full name and remaining SMS.
     """
-    browser.open('https://xtrazone.sso.bluewin.ch/index.php/' \
-                 '20,53,ajax,,,283/?route=%2Flogin%2Fuserboxinfo')
+    browser.open('https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/'
+                 '?route=%2Flogin%2Fuserboxinfo')
     resp = json.loads(browser.response().read())
 
     html = resp['content']
@@ -413,7 +409,9 @@ def query_receiver(contacts=[]):
     """Query for receiver number and return it."""
 
     # Configure and enable tab completion
+
     delimiter = ', ' if sys.platform == 'darwin' else ','
+
     def completer(text, state):
         """Contacts completer function for readline module"""
         options = [x[2].strip() for x in contacts
@@ -473,8 +471,8 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
 
     count = len(message)
     if count > __xtra_sms_max_length:
-        if auto_send_long_sms or yn_choice('Message is %u characters long and ' \
-                                           'will be split into several SMS. ' \
+        if auto_send_long_sms or yn_choice('Message is %u characters long and '
+                                           'will be split into several SMS. '
                                            'Do you want to send it anyway?' % count):
             i = 0
             while i < count:
@@ -500,8 +498,9 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
             u'Traitement réussi.',
             u'Elaborazione riuscita.',
         )
-        if (resp['content']['headline'] not in valid_headlines or
-            resp['content']['isError'] != False):
+        resp_headline = resp['content']['headline']
+        resp_error = resp['content']['isError']
+        if resp_headline not in valid_headlines or resp_error is not False:
             raise RuntimeError('Unknown error sending SMS.')
     except TypeError:  # Something went wrong.
         if __tracebacks:
