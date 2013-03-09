@@ -24,9 +24,10 @@ pyxtra. If not, see http://www.gnu.org/licenses/.
 
 import os
 import sys
+import re
 import stat
 import urllib
-import re
+import hashlib
 import getpass
 import ConfigParser
 import unicodedata
@@ -59,6 +60,10 @@ __tracebacks = False  # Set to True to show tracebacks
 __separator = '--------------------'
 __xtra_sms_max_length = 440  # Max length of xtrazone sms is 440
 __nr_validation_regex = r'^(((((\+|00)?41)|0)7[6-9])|((\+|00)?423))\d{7}$'
+__strict_nr_validation_regex = r'^41\d{9}$'
+
+STDIN_ENC = sys.stdin.encoding
+STDOUT_ENC = sys.stdout.encoding
 
 
 def yn_choice(message, default='y'):
@@ -333,21 +338,28 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
 def get_user_info(browser):
     """Retrieve user info.
 
-    Return nickname, full name and remaining SMS.
+    Return nickname, full name, number and remaining SMS.
     """
     browser.open('https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/'
                  '?route=%2Flogin%2Fuserboxinfo')
     resp = json.loads(browser.response().read())
 
-    html = resp['content']
-    soup = BeautifulSoup(html)
-    userinfo = soup.find('div', 'userinfo')
+    soup1 = BeautifulSoup(resp['content'])
+    userinfo = soup1.find('div', 'userinfo')
 
     nickname = userinfo.find('h5').text
     fullname = userinfo.find('h6').text
     remaining = filter(lambda c: c.isdigit(), userinfo.find('span').text)
 
-    return nickname, fullname, remaining
+    browser.open('https://xtrazone.sso.bluewin.ch/index.php/20?route=%2Fprofile')
+    soup2 = BeautifulSoup(browser.response().read())
+    profile = soup2.find('dl', 'profile personal')
+    try:
+        own_number = profile.find(text=re.compile(r'^41\d{9}')).strip()
+    except AttributeError:
+        raise RuntimeError('Could not retrieve own number from profile.')
+
+    return nickname, fullname, remaining, own_number
 
 
 def pull_contacts(browser):
@@ -394,6 +406,45 @@ def add_contact(browser, prename='', name='', nr=''):
     print 'Successfully saved contact %s %s.' % (prename, name)
 
 
+def delete_contact(browser, own_number, other_numbers):
+    """Delete a contact from the XtraZone address book."""
+
+    # Validate other_number
+    invalid_numbers = []
+    numbers = other_numbers.split(',')
+    for i, num in enumerate(numbers):
+        num = filter(lambda c: c.isdigit(), num)
+        if num.startswith('0'):
+            num = '41' + num[1:]
+        if not re.match(__strict_nr_validation_regex, num):
+            invalid_numbers.append(num)
+        numbers[i] = num
+    if invalid_numbers:
+        raise RuntimeError('Invalid phone numbers: {}'.format(', '.join(invalid_numbers)))
+
+    # Actually send delete request
+    url = 'https://xtrazone.sso.bluewin.ch/index.php/20,53,ajax,,,283/?route=' \
+          '%2Fprofile%2Fcontact%2Fdeletecontact&refresh=/profile/contact/contactsanchors'
+    for other_number in numbers:
+        own_hash = hashlib.md5(own_number).hexdigest()
+        other_hash = hashlib.md5(other_number).hexdigest()
+        data = {'id': 'com.swisscom.person:{0}:{1}'.format(own_hash, other_hash)}
+        browser.open(url, urllib.urlencode(data))
+
+        resp = json.loads(browser.response().read())
+
+        # Handle errors
+        if resp['content']['isError']:
+            msg = resp['content']['headline']
+            if 'messages' in resp['content'] and 'generic' in resp['content']['messages']:
+                msg = u'{}: {}'.format(msg, resp['content']['messages']['generic'][0])
+            raise RuntimeError(u'Deleting contact {} failed: {}'
+                    .format(other_number, msg).encode(STDOUT_ENC, 'replace'))
+
+    pluralized = 'contact' if len(numbers) == 1 else 'contacts'
+    print 'Successfully deleted {} {}'.format(pluralized, ', '.join(numbers))
+
+
 def print_contacts(contacts):
     """Print nicely formatted contact list."""
     def natel_nr(nr):
@@ -410,8 +461,8 @@ def print_contacts(contacts):
     print __separator
 
 
-def query_receiver(contacts=[]):
-    """Query for receiver number and return it."""
+def query_contact(contacts=[], query_string='Receivers: '):
+    """Query for contact number and return it."""
 
     # Configure and enable tab completion
 
@@ -436,7 +487,7 @@ def query_receiver(contacts=[]):
     def validate_contacts(text):
         """Replace contacts with corresponding cell phone numbers."""
         numbers = text.split(',')
-        numbers = map(lambda x: unicode(x, sys.stdin.encoding), numbers)  # To unicode
+        numbers = map(lambda x: unicode(x, STDIN_ENC), numbers)  # To unicode
         invalid_numbers = []
         for nr in numbers:
             # TODO: could several numbers match?
@@ -454,7 +505,7 @@ def query_receiver(contacts=[]):
 
     # Get receiver number(s)
     while 1:
-        receiver = raw_input('Receivers: ').strip(', ')
+        receiver = raw_input(query_string).strip(', ')
         try:
             receiver_clean = validate_contacts(receiver)
         except ValueError as e:
@@ -472,7 +523,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
     # Get message text
     while not message:
         message = raw_input('Message: ').strip()
-        message = unicode(message, sys.stdin.encoding).encode('utf-8')  # To utf-8
+        message = unicode(message, STDIN_ENC).encode(STDOUT_ENC, 'replace')
 
     count = len(message)
     if count > __xtra_sms_max_length:
@@ -556,7 +607,7 @@ def main():
     contacts = pull_contacts(browser)
 
     # Show welcome message
-    nickname, fullname, remaining = get_user_info(browser)
+    nickname, fullname, remaining, own_number = get_user_info(browser)
     print 'Hi %s. You have %s SMS remaining.' % (fullname, remaining)
 
     def print_help():
@@ -567,6 +618,7 @@ def main():
         print '\tc,   contacts - Show contacts'
         print '\ts,   search   - Search contacts'
         print '\ta,   add      - Add a new contact'
+        print '\td,   delete   - Delete one or more contacts'
         print '\th,   help     - Show this help'
         print '\tq,   quit     - Quit'
 
@@ -583,10 +635,10 @@ def main():
             try:
                 receiver_lock = choice in ['n!!', 'new!!']
                 if receiver_lock:
-                    receiver = query_receiver(contacts)
+                    receiver = query_contact(contacts)
                 while 1:
                     if not receiver_lock:
-                        receiver = query_receiver(contacts)
+                        receiver = query_contact(contacts)
                     send_sms(browser, receiver, cfg['logging'], cfg['auto_send_long_sms'])
                     print "%s SMS remaining." % get_user_info(browser)[2]
                     if choice in ['n', 'new']:
@@ -605,12 +657,22 @@ def main():
                 continue
             except RuntimeError as e:
                 print 'Error: %s' % str(e)
+        elif choice in ['d', 'delete']:
+            try:
+                other_number = query_contact(contacts, query_string='Contacts: ')
+                delete_contact(browser, own_number, other_number)
+                contacts = pull_contacts(browser)
+            except KeyboardInterrupt:
+                print '\nCancel...'
+                continue
+            except RuntimeError as e:
+                print 'Error: %s' % str(e)
         elif choice in ['s', 'search']:
             searchstr = params
 
             if not searchstr:
                 try:
-                    searchstr = raw_input("Enter a search string: ").decode(sys.stdout.encoding)
+                    searchstr = raw_input("Enter a search string: ").decode(STDIN_ENC)
                 except KeyboardInterrupt:
                     print '\nCancel...'
                     continue
