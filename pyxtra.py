@@ -373,7 +373,7 @@ def pull_contacts(browser):
     resp = browser.response().read()
     if not resp:
         return []
-    book = xlrd.open_workbook(file_contents=resp)
+    book = xlrd.open_workbook(file_contents=resp, logfile=open(os.devnull, 'w'))
     sheet = book.sheet_by_index(0)
     contacts = [sheet.row_values(row) for row in range(1, sheet.nrows)]
     return sorted(contacts, key=lambda c: c[2])
