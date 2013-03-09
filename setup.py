@@ -23,7 +23,7 @@ if sys.version_info.major == 2 and sys.version_info.minor == 5:
 
 # Setup
 setup(name='pyxtra',
-      version='1.5',
+      version='1.6',
       author='Danilo Bargen, Peter Manser',
       author_email='gezuru@gmail.com',
       url='https://github.com/dbrgn/pyxtra/',

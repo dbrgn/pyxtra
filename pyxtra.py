@@ -4,7 +4,7 @@
 """A small command-line utility written in Python to access the Swisscom
 Xtrazone SMS service
 
-Version: 1.5
+Version: 1.6
 
 License:
 Copyright (C) 2011-2013 Danilo Bargen, Peter Manser and contributors.

@@ -12,7 +12,7 @@ Features
 ========
 
 - Sending SMS messages from the command line
-- Access and add contacts
+- Access, add and delete contacts
 - Contacts tab completion (start typing and press tab to autocomplete)
 - CAPTCHA-Recognition (service by http://gorrion.ch/, thanks!)
 - Headless setup possible (if CAPTCHA-Recognition is enabled)
@@ -33,14 +33,6 @@ Prerequisites
 
 #. You need python>=2.5 and tk
 
-#. If you're still on python 2.5, install `simplejson` ::
-
-    $ sudo pip install simplejson
-
-   ...or if you're Debian / Ubuntu user::
-
-    $ sudo aptitude install python-simplejson
-
 Install via pip
 ---------------
 
@@ -59,13 +51,9 @@ Alternatively, you can install pyxtra the manual way.
 
         $ sudo pip install -r requirements.txt
 
-   If you haven't got pip installed, use `easy_install` instead. ::
-
-        $ sudo easy_install BeautifulSoup PIL mechanize xlrd
-
    Ubuntu/Debian users could also use apt instead of pip::
 
-        $ sudo apt-get install python-mechanize python-beautifulsoup \
+        $ sudo apt-get install python-mechanize python-beautifulsoup4 \
         python-xlrd python-imaging python-imaging-tk
 
 #. Install pyxtra ::
@@ -77,18 +65,29 @@ Alternatively, you can install pyxtra the manual way.
 FAQ
 ===
 
-**Q: How can I easily select the receiver from the contacts list when writing a new SMS?**
+**Q: How can I easily select the receiver from the contacts list when writing a
+new SMS?**
 
-A: pyxtra supports tab completion. Simply start typing a name and press the `tab` key.
+A: pyxtra supports tab completion. Simply start typing a name and press the
+`tab` key.
 
 **Q: How can I run pyxtra in a headless setup (e.g. on my server)?**
 
-A: Enable the anticaptcha feature and set `anticaptcha_max_tries` in your `~/.pyxtra/config` to a higher number.
+A: Enable the anticaptcha feature and set ``anticaptcha_max_tries`` in your
+``~/.pyxtra/config`` to a higher number.
 
 
 =========
 Changelog
 =========
+
+v1.6 (2013-03-09)
+
+- [add] Command to delete contacts (Issue #12)
+- [add] Improved status output while adding/deleting contacts
+- [bug] OS independent tempfiles (Issue #21)
+- [bug] Got rid of "OLE2 inconsistency" warnings (Issue #21)
+- [bug] Fixed problem with adding contacts and session timeouts (Issue #14)
 
 v1.5 (2012-06-09)
 
