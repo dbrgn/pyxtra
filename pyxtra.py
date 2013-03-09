@@ -32,7 +32,7 @@ import ConfigParser
 import unicodedata
 from StringIO import StringIO
 from datetime import datetime
-import gorrion
+from gorrion import GorrionService, GorrionError
 
 try:
     import readline
@@ -221,6 +221,8 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
     """Display the CAPTCHA and log in."""
 
     captcha_tries = 0
+    if anticaptcha:
+        gorrion = GorrionService()
 
     while 1:
         try:
@@ -313,16 +315,19 @@ def login(browser, username, password, anticaptcha=False, anticaptcha_max_tries=
                 if captcha:  # Report successful CAPTCHAs to gorrion
                     try:
                         gorrion.report(captcha, 1)
-                    except gorrion.GorrionError as e:
+                    except GorrionError as e:
                         print 'Anticaptcha reporting: %s' % str(e)
             break
 
         except RuntimeError as e:
             if anticaptcha and captcha_tries <= anticaptcha_max_tries:
                 if captcha:
-                    pass  # Possibly report to gorrion
+                    pass  # TODO Possibly report to gorrion
             if captcha_tries > anticaptcha_max_tries:
                 print 'Wrong CAPTCHA. Try again.'
+
+    if anticaptcha:
+        del gorrion
 
 
 def get_user_info(browser):
