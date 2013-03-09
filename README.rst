@@ -31,7 +31,7 @@ Installation
 Prerequisites
 -------------
 
-#. You need python>=2.5 and tk
+- You need python>=2.5 and tk
 
 Install via pip
 ---------------
