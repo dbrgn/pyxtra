@@ -396,6 +396,7 @@ def add_contact(browser, prename='', name='', nr=''):
             'prename': prename,
             'save': 'Speichern',
             }
+    print 'Adding contact, this might take a while...'
     browser.open(url, urllib.urlencode(data))
 
     resp = json.loads(browser.response().read())
@@ -428,7 +429,8 @@ def delete_contact(browser, own_number, other_numbers):
     for other_number in numbers:
         own_hash = hashlib.md5(own_number).hexdigest()
         other_hash = hashlib.md5(other_number).hexdigest()
-        data = {'id': 'com.swisscom.person:{0}:{1}'.format(own_hash, other_hash)}
+        data = {'id': 'com.swisscom.person:{}:{}'.format(own_hash, other_hash)}
+        print 'Deleting {}...'.format(other_number)
         browser.open(url, urllib.urlencode(data))
 
         resp = json.loads(browser.response().read())
@@ -442,7 +444,6 @@ def delete_contact(browser, own_number, other_numbers):
                     .format(other_number, msg).encode(STDOUT_ENC, 'replace'))
 
     pluralized = 'contact' if len(numbers) == 1 else 'contacts'
-    print 'Successfully deleted {} {}'.format(pluralized, ', '.join(numbers))
 
 
 def print_contacts(contacts):
