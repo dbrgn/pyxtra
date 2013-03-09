@@ -207,7 +207,7 @@ def init():
     b.set_handle_refresh(mechanize._http.HTTPRefreshProcessor(), max_time=1)
     # User agent
     b.addheaders = [
-        ('User-agent', 'Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.0; Trident/4.0)'),
+        ('User-agent', 'Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 7.1; Trident/5.0)'),
     ]
     # Debugging stuff
     if __debug:
