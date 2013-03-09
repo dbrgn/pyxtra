@@ -401,9 +401,14 @@ def add_contact(browser, prename='', name='', nr=''):
 
     resp = json.loads(browser.response().read())
 
+    if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
+        print 'Session has expired. Reconnecting...'
+        cfg = parse_config()
+        login(browser, cfg['username'], cfg['password'],
+              cfg['anticaptcha'], cfg['anticaptcha_max_tries'])
+        print 'Session is restored. Please try again.'
     if resp['content']['isError']:
-        raise RuntimeError(
-                'Adding contact failed: %s' % resp['content']['headline'])
+        raise RuntimeError('Adding contact failed: %s' % resp['content']['headline'])
     print 'Successfully saved contact %s %s.' % (prename, name)
 
 
@@ -560,7 +565,7 @@ def send_sms(browser, receiver, logging=False, auto_send_long_sms=False, message
         if resp_headline not in valid_headlines or resp_error is not False:
             raise RuntimeError('Unknown error sending SMS.')
     except TypeError:  # Something went wrong.
-        if __tracebacks:
+        if __debug:
             print resp
         if 'Auf diese Inhalte kannst Du nicht zugreifen' in resp['content']:
             print 'Session has expired. Reconnecting...'
