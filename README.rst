@@ -2,6 +2,10 @@
 pyxtra
 ######
 
+.. image:: https://pypip.in/d/pyxtra/badge.png
+    :alt: PyPI download stats
+    :target: https://crate.io/packages/pyxtra
+
 pyxtra is a small commandline utility to access the Swisscom Xtrazone SMS service. It is being developed for Linux- and OS X-based operating systems.
 
 .. image:: https://github.com/dbrgn/pyxtra/raw/master/screenshot.png
