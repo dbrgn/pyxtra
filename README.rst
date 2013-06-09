@@ -85,6 +85,10 @@ A: Enable the anticaptcha feature and set ``anticaptcha_max_tries`` in your
 Changelog
 =========
 
+v1.6.1 (2013-06-09)
+
+- [bug] Updated anticaptcha certificate, related SSL bugs should now be gone
+
 v1.6 (2013-03-09)
 
 - [add] Command to delete contacts (Issue #12)
