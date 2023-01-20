@@ -1,5 +1,5 @@
 beautifulsoup4==4.1.3
 PIL==1.1.7
-mechanize==0.2.5
+mechanize==0.4.6
 xlrd==0.9.0
 readline==6.2.4.1
